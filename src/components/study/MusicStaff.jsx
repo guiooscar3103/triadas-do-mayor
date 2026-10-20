@@ -98,7 +98,7 @@ export default function MusicStaff({
   ];
 
   return (
-    <div className="w-full bg-slate-950/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-2xl backdrop-blur-md overflow-x-auto">
+    <div className="w-full bg-slate-950/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-2xl backdrop-blur-md overflow-x-auto touch-pan-x">
       {/* Controles de modo del pentagrama */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-slate-800/80 pb-3">
         <div className="flex items-center gap-2">
@@ -108,6 +108,11 @@ export default function MusicStaff({
           <span className="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
             Clave de Sol (8vb Guitarra)
           </span>
+        </div>
+
+        {/* Indicador sutil para móviles */}
+        <div className="flex sm:hidden items-center gap-1 text-[10px] font-mono text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-full border border-cyan-500/20">
+          Desliza horizontalmente ↔
         </div>
 
         <div className="flex items-center gap-2">

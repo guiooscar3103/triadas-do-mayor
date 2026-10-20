@@ -91,7 +91,15 @@ export default function Fretboard({
   };
 
   return (
-    <div className="w-full bg-slate-950/90 border border-slate-800 rounded-2xl p-3 sm:p-5 shadow-2xl backdrop-blur-md overflow-x-auto">
+    <div className="w-full bg-slate-950/90 border border-slate-800 rounded-2xl p-3 sm:p-5 shadow-2xl backdrop-blur-md overflow-x-auto touch-pan-x">
+      {/* Indicador sutil para móviles */}
+      <div className="flex sm:hidden items-center justify-between text-[11px] text-slate-400 mb-2 px-1">
+        <span className="font-medium text-slate-300">Mástil interactivo</span>
+        <span className="inline-flex items-center gap-1 text-[10px] font-mono text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">
+          Desliza horizontalmente ↔
+        </span>
+      </div>
+
       <div className="min-w-[760px] select-none">
         <svg
           viewBox={`0 0 ${svgWidth} ${svgHeight}`}

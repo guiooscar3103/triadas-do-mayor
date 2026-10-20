@@ -6,7 +6,14 @@
   body {
     @apply bg-slate-950 text-slate-100 font-sans;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-tap-highlight-color: transparent;
   }
+}
+
+/* Smooth touch scrolling for horizontal SVG containers on mobile */
+.touch-pan-x {
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Custom scrollbar */

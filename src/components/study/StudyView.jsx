@@ -97,7 +97,7 @@ export default function StudyView({
 
             <div className="h-5 w-px bg-slate-800 hidden sm:block" />
 
-            {/* Selector rápido de posición */}
+            {/* Selector rápido de posición (Escritorio: pestañas) */}
             <div className="hidden md:flex items-center gap-1.5">
               {C_MAJOR_POSITIONS.map((pos) => (
                 <button
@@ -113,6 +113,21 @@ export default function StudyView({
                   P{pos.numero}
                 </button>
               ))}
+            </div>
+
+            {/* Selector rápido de posición (Móvil: dropdown compacto) */}
+            <div className="md:hidden">
+              <select
+                value={currentPosition.id}
+                onChange={(e) => onChangePosition(Number(e.target.value))}
+                className="bg-slate-900 border border-slate-800 text-rose-400 text-xs font-bold rounded-lg px-2 py-1.5 focus:outline-none focus:border-rose-500"
+              >
+                {C_MAJOR_POSITIONS.map((pos) => (
+                  <option key={pos.id} value={pos.id}>
+                    P{pos.numero} ({pos.notaInicio})
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
