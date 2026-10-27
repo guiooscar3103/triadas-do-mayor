@@ -3,10 +3,31 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --color-bg: #0A0A0B;
+    --color-panel: #151516;
+    --color-surface: #202022;
+    --color-border: #303034;
+    --color-text: #F1F0EC;
+    --color-muted: #A09FA3;
+    --color-gold: #C6A15B;
+    --triad-root: #C6A15B;
+    --triad-third: #2DD4BF;
+    --triad-fifth: #818CF8;
+    --triad-passing: #202024;
+  }
+
   body {
-    @apply bg-slate-950 text-slate-100 font-sans;
+    background-color: #0A0A0B;
+    color: #F1F0EC;
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     -webkit-tap-highlight-color: transparent;
+  }
+
+  ::selection {
+    background-color: rgba(198, 161, 91, 0.25);
+    color: #F1F0EC;
   }
 }
 
@@ -16,23 +37,23 @@
   -webkit-overflow-scrolling: touch;
 }
 
-/* Custom scrollbar */
+/* Custom discreet dark scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #090d16;
+  background: #0A0A0B;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 4px;
+  background: #28282C;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #38383E;
 }
 
 /* Smooth SVG transitions */

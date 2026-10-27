@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { buildSequenceIndices } from '../utils/musicTheory';
 
 /**
  * Hook de Secuenciador sincronizado para arpegios y escalas.
@@ -7,13 +8,15 @@ import { useState, useEffect, useRef, useCallback } from 'react';
  * - 'ASC': Solo ascendente (0 -> N-1)
  * - 'UP_DOWN': Ida y vuelta (0 -> N-1 -> 0)
  * 
- * Gestiona BPM (40 - 180), llamada a audio y estado de nota activa.
+ * Gestiona BPM (40 - 180), llamada a audio con duración proporcional al tempo,
+ * corrección de deriva temporal (drift-correction) y estado de nota activa.
  */
 export function useSequencer({
   notes = [],
   playNote = () => {},
   defaultBpm = 80,
-  defaultDirection = 'ASC'
+  defaultDirection = 'ASC',
+  onStopAudio = () => {}
 }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [bpm, setBpm] = useState(defaultBpm);
@@ -27,9 +30,11 @@ export function useSequencer({
   const currentStepPointerRef = useRef(0);
   const notesRef = useRef(notes);
   const playNoteRef = useRef(playNote);
+  const onStopAudioRef = useRef(onStopAudio);
   const bpmRef = useRef(bpm);
   const directionRef = useRef(direction);
   const isPlayingRef = useRef(isPlaying);
+  const nextTargetTimeRef = useRef(0);
 
   // Mantener actualizadas las referencias sin romper cierres
   useEffect(() => {
@@ -39,6 +44,10 @@ export function useSequencer({
   useEffect(() => {
     playNoteRef.current = playNote;
   }, [playNote]);
+
+  useEffect(() => {
+    onStopAudioRef.current = onStopAudio;
+  }, [onStopAudio]);
 
   useEffect(() => {
     bpmRef.current = bpm;
@@ -52,24 +61,6 @@ export function useSequencer({
     isPlayingRef.current = isPlaying;
   }, [isPlaying]);
 
-  // Construir la secuencia de índices según la dirección
-  const buildSequence = useCallback((items, dir) => {
-    if (!items || items.length === 0) return [];
-    const len = items.length;
-    if (dir === 'ASC') {
-      return Array.from({ length: len }, (_, i) => i);
-    } else {
-      // UP_DOWN: 0, 1, ..., len-1, len-2, ..., 1
-      const asc = Array.from({ length: len }, (_, i) => i);
-      if (len <= 2) return asc;
-      const desc = [];
-      for (let i = len - 2; i > 0; i--) {
-        desc.push(i);
-      }
-      return [...asc, ...desc];
-    }
-  }, []);
-
   // Detener y limpiar temporizador
   const stopTimer = useCallback(() => {
     if (timerRef.current) {
@@ -80,18 +71,26 @@ export function useSequencer({
 
   const pause = useCallback(() => {
     stopTimer();
+    isPlayingRef.current = false;
     setIsPlaying(false);
+    if (typeof onStopAudioRef.current === 'function') {
+      onStopAudioRef.current();
+    }
   }, [stopTimer]);
 
   const stop = useCallback(() => {
     stopTimer();
+    isPlayingRef.current = false;
     setIsPlaying(false);
     currentStepPointerRef.current = 0;
     setActiveIndex(null);
     setActiveNoteId(null);
+    if (typeof onStopAudioRef.current === 'function') {
+      onStopAudioRef.current();
+    }
   }, [stopTimer]);
 
-  // Ejecución de un paso del secuenciador
+  // Ejecución de un paso del secuenciador con corrección de deriva temporal
   const scheduleNextStep = useCallback(() => {
     stopTimer();
 
@@ -106,41 +105,57 @@ export function useSequencer({
     const noteIndex = sequence[currentStepPointerRef.current];
     const note = currentNotes[noteIndex];
 
+    const currentBpm = bpmRef.current;
+    const stepDurationSec = 60 / currentBpm;
+    // Duración de la nota acústica adaptada al tempo (máx 92% del paso para evitar solapamiento)
+    const noteDurationSec = Math.min(1.2, Math.max(0.15, stepDurationSec * 0.92));
+
     if (note) {
       setActiveIndex(noteIndex);
       setActiveNoteId(note.id);
       if (typeof playNoteRef.current === 'function') {
-        playNoteRef.current(note.midi);
+        playNoteRef.current(note.midi, noteDurationSec);
       }
     }
 
     // Avanzar puntero circularmente
     currentStepPointerRef.current = (currentStepPointerRef.current + 1) % sequence.length;
 
-    // Calcular duración de cada paso según BPM (negra por paso)
-    const intervalMs = (60 / bpmRef.current) * 1000;
+    // Intervalo teórico en milisegundos
+    const intervalMs = stepDurationSec * 1000;
+    const now = performance.now();
+
+    if (nextTargetTimeRef.current === 0) {
+      nextTargetTimeRef.current = now + intervalMs;
+    } else {
+      nextTargetTimeRef.current += intervalMs;
+    }
+
+    // Compensar deriva del temporizador de JavaScript
+    const delay = Math.max(0, nextTargetTimeRef.current - now);
 
     timerRef.current = setTimeout(() => {
       if (isPlayingRef.current) {
         scheduleNextStep();
       }
-    }, intervalMs);
+    }, delay);
   }, [stopTimer]);
 
   const play = useCallback(() => {
     if (!notesRef.current || notesRef.current.length === 0) return;
     stopTimer();
-    stepSeqRef.current = buildSequence(notesRef.current, directionRef.current);
-    
+    stepSeqRef.current = buildSequenceIndices(notesRef.current.length, directionRef.current);
+
     // Si ya estamos fuera de rango, resetear al inicio
     if (currentStepPointerRef.current >= stepSeqRef.current.length) {
       currentStepPointerRef.current = 0;
     }
-    
+
     setIsPlaying(true);
     isPlayingRef.current = true;
+    nextTargetTimeRef.current = 0;
     scheduleNextStep();
-  }, [buildSequence, scheduleNextStep, stopTimer]);
+  }, [scheduleNextStep, stopTimer]);
 
   const togglePlay = useCallback(() => {
     if (isPlaying) {
@@ -154,11 +169,11 @@ export function useSequencer({
   const handleSetDirection = useCallback((newDir) => {
     setDirection(newDir);
     directionRef.current = newDir;
-    stepSeqRef.current = buildSequence(notesRef.current, newDir);
+    stepSeqRef.current = buildSequenceIndices(notesRef.current.length, newDir);
     if (currentStepPointerRef.current >= stepSeqRef.current.length) {
       currentStepPointerRef.current = 0;
     }
-  }, [buildSequence]);
+  }, []);
 
   // Cambiar BPM con límites seguros (40 a 180)
   const handleSetBpm = useCallback((newBpm) => {
@@ -173,7 +188,7 @@ export function useSequencer({
     setActiveIndex(index !== undefined ? index : null);
     setActiveNoteId(note.id);
     if (typeof playNoteRef.current === 'function') {
-      playNoteRef.current(note.midi);
+      playNoteRef.current(note.midi, 1.2);
     }
   }, []);
 
@@ -207,3 +222,4 @@ export function useSequencer({
 }
 
 export default useSequencer;
+

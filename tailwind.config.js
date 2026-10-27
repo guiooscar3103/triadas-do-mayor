@@ -12,17 +12,26 @@ export default {
         mono: ['JetBrains Mono', 'monospace'],
       },
       colors: {
-        fretboard: {
-          wood: '#1e1b18',
-          fret: '#94a3b8',
-          inlay: '#475569',
-          nut: '#cbd5e1',
+        studio: {
+          bg: '#0A0A0B',
+          panel: '#151516',
+          surface: '#202022',
+          border: '#303034',
+          'border-subtle': '#242428',
+          'border-gold': 'rgba(198, 161, 91, 0.4)',
+          text: '#F1F0EC',
+          muted: '#A09FA3',
+          faint: '#68676B',
+          gold: '#C6A15B',
+          'gold-hover': '#D4B06A',
+          'gold-subtle': 'rgba(198, 161, 91, 0.12)'
         },
         triad: {
-          root: '#ef4444',
-          third: '#0ea5e9',
-          fifth: '#f59e0b',
-          passing: '#334155',
+          root: '#C6A15B',     // Fundamental: Dorado sobrio
+          third: '#2DD4BF',    // Tercera: Turquesa suave
+          fifth: '#818CF8',    // Quinta: Lavanda / Azul grisáceo
+          passing: '#202024',  // Nota de paso
+          'passing-text': '#8A898D'
         }
       },
       animation: {

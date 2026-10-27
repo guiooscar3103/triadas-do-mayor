@@ -28,26 +28,26 @@ export default function PlaybackBar({
   arpeggioCount
 }) {
   return (
-    <div className="bg-slate-900/95 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-2xl backdrop-blur-md">
-      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+    <div className="bg-[#151516] border border-[#242428] rounded-xl p-3 sm:p-3.5">
+      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
         {/* Sección Izquierda: Botones de Transporte (Play / Pause / Stop) y Nota Activa */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <button
             onClick={onTogglePlay}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 cursor-pointer shadow-lg ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-xs transition-all duration-150 cursor-pointer ${
               isPlaying
-                ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/30'
-                : 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/30 ring-2 ring-rose-500/50'
+                ? 'bg-[#202022] hover:bg-[#28282C] text-[#C6A15B] border border-[#C6A15B]/60'
+                : 'bg-[#C6A15B] hover:bg-[#D4B06A] text-[#0A0A0B] border border-[#C6A15B]'
             }`}
           >
             {isPlaying ? (
               <>
-                <Pause className="w-4 h-4 fill-current" />
+                <Pause className="w-3.5 h-3.5 fill-current" />
                 <span>Pausar</span>
               </>
             ) : (
               <>
-                <Play className="w-4 h-4 fill-current ml-0.5" />
+                <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
                 <span>Reproducir</span>
               </>
             )}
@@ -55,40 +55,40 @@ export default function PlaybackBar({
 
           <button
             onClick={onStop}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#1A1A1C] hover:bg-[#222225] text-[#A09FA3] hover:text-[#F1F0EC] text-xs font-medium border border-[#2A2A2E] transition-colors cursor-pointer"
             title="Detener y volver al inicio"
           >
-            <Square className="w-3.5 h-3.5 fill-current" />
+            <Square className="w-3 h-3 fill-current" />
             <span className="hidden sm:inline">Detener</span>
           </button>
 
-          {/* Badge con conteo de notas de la tríada */}
+          {/* Badge con conteo de notas del arpegio */}
           {arpeggioCount !== undefined && (
-            <span className="text-xs font-mono px-2.5 py-1.5 rounded-xl bg-slate-950 text-slate-400 border border-slate-800 hidden sm:inline-block">
-              Arpegio: <span className="text-rose-400 font-bold">{arpeggioCount}</span> notas
+            <span className="text-[11px] font-mono px-2.5 py-1.5 rounded-lg bg-[#0E0E10] text-[#A09FA3] border border-[#242428] hidden sm:inline-block">
+              Arpegio: <span className="text-[#C6A15B] font-bold">{arpeggioCount}</span> notas
             </span>
           )}
 
-          {/* Chip de Nota Activa */}
+          {/* Indicador de Nota Activa */}
           {activeNote && (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950 border border-rose-500/50 text-xs font-mono">
-              <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
-              <span className="text-slate-400 text-[11px]">Sonando:</span>
-              <span className="text-white font-bold text-sm text-rose-400">
+            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[#0E0E10] border border-[#C6A15B]/40 text-xs font-mono">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#C6A15B] animate-ping" />
+              <span className="text-[#8A898D] text-[10px]">Nota:</span>
+              <span className="text-[#C6A15B] font-bold">
                 {activeNote.nota}{activeNote.octava}
               </span>
-              <span className="text-slate-500 text-[10px]">
-                (Cuerda {activeNote.cuerda}, Tr.{activeNote.traste})
+              <span className="text-[#68676B] text-[10px]">
+                (C{activeNote.cuerda} T{activeNote.traste})
               </span>
             </div>
           )}
         </div>
 
         {/* Sección Central: Control de Tempo (BPM) */}
-        <div className="flex items-center gap-3 bg-slate-950/80 px-4 py-2.5 rounded-xl border border-slate-800">
-          <div className="flex items-center gap-2">
-            <Sliders className="w-4 h-4 text-cyan-400" />
-            <span className="text-xs font-bold text-slate-300">Tempo:</span>
+        <div className="flex items-center gap-3 bg-[#0E0E10] px-3.5 py-2 rounded-lg border border-[#202022]">
+          <div className="flex items-center gap-1.5 text-xs text-[#A09FA3]">
+            <Sliders className="w-3.5 h-3.5 text-[#C6A15B]" />
+            <span className="font-medium text-[11px]">Tempo:</span>
           </div>
 
           <input
@@ -98,32 +98,32 @@ export default function PlaybackBar({
             step="2"
             value={bpm}
             onChange={(e) => onBpmChange(Number(e.target.value))}
-            className="w-28 sm:w-36 accent-rose-500 cursor-pointer"
+            className="w-24 sm:w-32 accent-[#C6A15B] cursor-pointer"
           />
 
           <div className="flex items-baseline gap-1 font-mono">
-            <span className="text-sm font-bold text-rose-400">{bpm}</span>
-            <span className="text-[10px] text-slate-500">BPM</span>
+            <span className="text-xs font-bold text-[#F1F0EC]">{bpm}</span>
+            <span className="text-[9px] text-[#68676B]">BPM</span>
           </div>
         </div>
 
         {/* Sección Derecha: Dirección y Toggles de Visualización */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
           {/* Toggle Dirección */}
           <button
             onClick={() => onDirectionChange(direction === 'ASC' ? 'UP_DOWN' : 'ASC')}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-750 border border-slate-700 text-xs font-medium text-slate-200 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1A1A1C] hover:bg-[#222225] border border-[#2A2A2E] text-xs font-medium text-[#D4D4D8] transition-colors cursor-pointer"
             title="Cambiar dirección del ejercicio"
           >
             {direction === 'ASC' ? (
               <>
-                <ArrowRight className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Ascendente (1 → N)</span>
+                <ArrowRight className="w-3 h-3 text-[#C6A15B]" />
+                <span className="text-[11px]">Ascendente</span>
               </>
             ) : (
               <>
-                <ArrowLeftRight className="w-3.5 h-3.5 text-amber-400" />
-                <span>Ida y Vuelta (1 → N → 1)</span>
+                <ArrowLeftRight className="w-3 h-3 text-[#C6A15B]" />
+                <span className="text-[11px]">Ida y Vuelta</span>
               </>
             )}
           </button>
@@ -131,18 +131,18 @@ export default function PlaybackBar({
           {/* Toggle Etiquetas: Nombre vs Intervalo */}
           <button
             onClick={onToggleLabelMode}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-750 border border-slate-700 text-xs font-medium text-slate-200 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1A1A1C] hover:bg-[#222225] border border-[#2A2A2E] text-xs font-medium text-[#D4D4D8] transition-colors cursor-pointer"
             title="Alternar entre nombres de notas o intervalos de la tríada"
           >
             {labelMode === 'note' ? (
               <>
-                <Type className="w-3.5 h-3.5 text-rose-400" />
-                <span>Notas (C, E, G)</span>
+                <Type className="w-3 h-3 text-[#C6A15B]" />
+                <span className="text-[11px]">Notas (C, E, G)</span>
               </>
             ) : (
               <>
-                <Hash className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Intervalos (1, 3, 5)</span>
+                <Hash className="w-3 h-3 text-[#C6A15B]" />
+                <span className="text-[11px]">Intervalos (1, 3, 5)</span>
               </>
             )}
           </button>
@@ -150,22 +150,22 @@ export default function PlaybackBar({
           {/* Toggle Notas de Paso */}
           <button
             onClick={onToggleShowPassingNotes}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-medium transition-colors cursor-pointer ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors cursor-pointer ${
               showPassingNotes
-                ? 'bg-slate-800 border-slate-700 text-slate-300'
-                : 'bg-rose-500/10 border-rose-500/30 text-rose-400'
+                ? 'bg-[#1A1A1C] border-[#2A2A2E] text-[#D4D4D8]'
+                : 'bg-[#202022] border-[#C6A15B]/40 text-[#C6A15B]'
             }`}
             title="Mostrar u ocultar notas de paso que no pertenecen a la tríada"
           >
             {showPassingNotes ? (
               <>
-                <Eye className="w-3.5 h-3.5 text-slate-400" />
-                <span>Notas de paso: Sí</span>
+                <Eye className="w-3 h-3 text-[#8A898D]" />
+                <span className="text-[11px]">Notas de paso: Sí</span>
               </>
             ) : (
               <>
-                <EyeOff className="w-3.5 h-3.5 text-rose-400" />
-                <span>Solo tríada</span>
+                <EyeOff className="w-3 h-3 text-[#C6A15B]" />
+                <span className="text-[11px]">Solo tríada</span>
               </>
             )}
           </button>

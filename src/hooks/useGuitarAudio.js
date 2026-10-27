@@ -1,4 +1,5 @@
 import { useRef, useCallback, useEffect } from 'react';
+import { getFrequency } from '../utils/musicTheory';
 
 /**
  * Hook de sintetizador de guitarra acústica / eléctrica limpia usando Web Audio API.
@@ -6,9 +7,10 @@ import { useRef, useCallback, useEffect } from 'react';
  * Especificaciones de síntesis acústica:
  * - Frecuencia exacta: f = 440 * 2^((midi - 69) / 12)
  * - 2 osciladores: Triangle (cuerpo fundamental) + Sawtooth (armónicos metálicos)
- * - Filtro Biquad lowpass dinámico: corte inicial en f * 3.5 cayendo exponencialmente a f * 0.8 en 1.2s
- * - Ganancia con envolvente ADSR de cuerda pulsada: ataque lineal en 15ms a 0.35, decaimiento exponencial a 0.0001 en 1.5s
- * - Evita pops / clicks con rampas suaves de ganancia
+ * - Filtro Biquad lowpass dinámico: corte inicial en f * 3.5 cayendo exponencialmente a f * 0.8
+ * - Ganancia con envolvente ADSR de cuerda pulsada
+ * - Manejo de polifonía (máximo 4 voces simultáneas) para evitar solapamiento / cacofonía
+ * - Desconexión de nodos al finalizar (onended) para evitar fugas de memoria en Web Audio
  */
 export function useGuitarAudio() {
   const audioContextRef = useRef(null);
@@ -29,18 +31,32 @@ export function useGuitarAudio() {
   }, []);
 
   /**
-   * Reproduce una nota dado su número MIDI.
+   * Reproduce una nota dado su número MIDI con duración adaptativa.
    * @param {number} midi - Número MIDI de la nota (ej. 48 para C3, 60 para C4)
-   * @param {number} duration - Duración estimada en segundos (default 1.5s)
+   * @param {number} duration - Duración estimada en segundos (default 1.2s)
    */
-  const playNote = useCallback((midi, duration = 1.5) => {
+  const playNote = useCallback((midi, duration = 1.2) => {
     try {
       const ctx = getAudioContext();
       if (!ctx) return;
 
       const now = ctx.currentTime;
-      // Frecuencia exacta f = 440 * 2^((midi - 69) / 12)
-      const freq = 440 * Math.pow(2, (midi - 69) / 12);
+      const freq = getFrequency(midi);
+
+      // Gestión de polifonía: si hay más de 3 notas activas sonando,
+      // atenuar suavemente la más antigua en 20ms para evitar saturación y solapamiento
+      if (activeNodesRef.current.length >= 4) {
+        const oldest = activeNodesRef.current.shift();
+        if (oldest) {
+          try {
+            oldest.masterGain.gain.cancelScheduledValues(now);
+            oldest.masterGain.gain.setValueAtTime(oldest.masterGain.gain.value, now);
+            oldest.masterGain.gain.linearRampToValueAtTime(0.0001, now + 0.02);
+            oldest.oscTriangle.stop(now + 0.03);
+            oldest.oscSaw.stop(now + 0.03);
+          } catch (_) {}
+        }
+      }
 
       // Oscilador 1: Cuerpo fundamental (Triangle)
       const oscTriangle = ctx.createOscillator();
@@ -62,14 +78,14 @@ export function useGuitarAudio() {
       oscTriangle.connect(gainTri);
       oscSaw.connect(gainSaw);
 
-      // Filtro Biquad Lowpass para calidez de madera
+      // Filtro Biquad Lowpass para calidez acústica
       const filter = ctx.createBiquadFilter();
       filter.type = 'lowpass';
       const initialCutoff = Math.min(freq * 3.5, 12000);
       const endCutoff = Math.max(freq * 0.8, 120);
 
       filter.frequency.setValueAtTime(initialCutoff, now);
-      filter.frequency.exponentialRampToValueAtTime(endCutoff, now + 1.2);
+      filter.frequency.exponentialRampToValueAtTime(endCutoff, now + Math.min(1.0, duration * 0.8));
       filter.Q.setValueAtTime(3.0, now);
 
       gainTri.connect(filter);
@@ -77,11 +93,11 @@ export function useGuitarAudio() {
 
       // Envolvente de Ganancia Master (ADSR cuerda pulsada)
       const masterGain = ctx.createGain();
-      // Comenzar en silencio absoluto para evitar click
       masterGain.gain.setValueAtTime(0.0001, now);
-      // Ataque lineal a 0.35 en 15 ms (0.015s)
-      masterGain.gain.linearRampToValueAtTime(0.35, now + 0.015);
-      // Decaimiento exponencial a 0.0001 en duration (1.5s)
+      // Ataque lineal suave en 12 ms
+      const attackTime = Math.min(0.015, duration * 0.05);
+      masterGain.gain.linearRampToValueAtTime(0.35, now + attackTime);
+      // Decaimiento exponencial a 0.0001
       masterGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
       filter.connect(masterGain);
@@ -95,13 +111,27 @@ export function useGuitarAudio() {
       oscTriangle.stop(stopTime);
       oscSaw.stop(stopTime);
 
-      // Guardar referencia para cleanup si se requiere
-      const nodeTracker = { oscTriangle, oscSaw, masterGain, stopTime };
+      // Limpieza y desconexión automática al terminar
+      const cleanup = () => {
+        try {
+          oscTriangle.disconnect();
+          oscSaw.disconnect();
+          gainTri.disconnect();
+          gainSaw.disconnect();
+          filter.disconnect();
+          masterGain.disconnect();
+        } catch (_) {}
+      };
+
+      oscTriangle.onended = cleanup;
+
+      // Guardar referencia para control de polifonía o stop manual
+      const nodeTracker = { oscTriangle, oscSaw, masterGain, stopTime, cleanup };
       activeNodesRef.current.push(nodeTracker);
 
-      // Limpiar nodos viejos
+      // Limpiar del registro de nodos activos cuando termine
       setTimeout(() => {
-        activeNodesRef.current = activeNodesRef.current.filter(n => n !== nodeTracker);
+        activeNodesRef.current = activeNodesRef.current.filter((n) => n !== nodeTracker);
       }, duration * 1000 + 100);
 
     } catch (err) {
@@ -110,17 +140,20 @@ export function useGuitarAudio() {
   }, [getAudioContext]);
 
   /**
-   * Detiene notas en reproducción inmediata
+   * Detiene inmediatamente todas las notas activas con rampa anti-clic
    */
   const stopAllNotes = useCallback(() => {
     if (audioContextRef.current) {
       try {
         const now = audioContextRef.current.currentTime;
-        activeNodesRef.current.forEach(({ masterGain }) => {
+        activeNodesRef.current.forEach(({ oscTriangle, oscSaw, masterGain, cleanup }) => {
           try {
             masterGain.gain.cancelScheduledValues(now);
             masterGain.gain.setValueAtTime(masterGain.gain.value, now);
             masterGain.gain.linearRampToValueAtTime(0.0001, now + 0.02);
+            if (oscTriangle) oscTriangle.stop(now + 0.03);
+            if (oscSaw) oscSaw.stop(now + 0.03);
+            setTimeout(() => cleanup && cleanup(), 40);
           } catch (_) {}
         });
         activeNodesRef.current = [];
@@ -146,3 +179,4 @@ export function useGuitarAudio() {
 }
 
 export default useGuitarAudio;
+
