@@ -97,7 +97,7 @@ export default function StudyView({
 
   return (
     <div className="min-h-screen bg-[#0A0A0B] text-[#F1F0EC] pb-20 selection:bg-[#C6A15B] selection:text-[#0A0A0B]">
-      {/* Barra de Navegación Superior */}
+      {/* Barra de Navegación Secundaria */}
       <header className="sticky top-0 z-30 bg-[#0A0A0B]/90 backdrop-blur-md border-b border-[#202022] px-4 sm:px-6 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -150,7 +150,7 @@ export default function StudyView({
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Botón directo a Modo Progresiones */}
+            {/* Botón directo destacado a Modo Progresiones */}
             {onGoToProgressions && (
               <button
                 onClick={() => {
@@ -158,10 +158,10 @@ export default function StudyView({
                   stopAllNotes();
                   onGoToProgressions();
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#202022] hover:bg-[#2A2A2E] border border-[#303034] hover:border-[#C6A15B]/40 text-[#F1F0EC] text-xs font-medium transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#C6A15B]/15 hover:bg-[#C6A15B]/25 border border-[#C6A15B]/50 text-[#C6A15B] hover:text-[#F1F0EC] text-xs font-semibold shadow-sm transition-all cursor-pointer"
               >
-                <Sparkles className="w-3.5 h-3.5 text-[#C6A15B]" />
-                <span className="hidden sm:inline">Modo Progresiones</span>
+                <Sparkles className="w-3.5 h-3.5 fill-current" />
+                <span>Modo Progresiones</span>
               </button>
             )}
 

@@ -29,6 +29,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#0A0A0B] text-[#F1F0EC] font-sans antialiased selection:bg-[#C6A15B]/25 selection:text-[#F1F0EC]">
+      {/* Contenido de las Vistas */}
       {currentView === 'DASHBOARD' && (
         <DashboardView
           onSelectPosition={handleSelectPosition}

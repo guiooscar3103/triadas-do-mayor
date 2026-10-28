@@ -131,43 +131,73 @@ export function buildStepNoteSequence(position, triad, direction = 'ASC') {
  * @param {Array<object>} triads - Catálogo de tríadas (por defecto DIATONIC_TRIADS)
  * @returns {Array<object>} Secuencia lineal de notas con metadatos contextuales
  */
+/**
+ * Compila una progresión completa en una secuencia lineal plana de eventos ejecutables.
+ * 
+ * Soporta:
+ * - Repetición de cada acorde (chordRepeat: 1x, 2x, 4x o por paso)
+ * - Repetición de cada nota (noteRepeat: 1x, 2x)
+ * - Indicadores límite isFirstInStep e isLastInStep para separación armónica precisa
+ * 
+ * @param {Array<object>} steps - Pasos de la progresión
+ * @param {Array<object>} positions - Catálogo de posiciones (por defecto C_MAJOR_POSITIONS)
+ * @param {Array<object>} triads - Catálogo de tríadas (por defecto DIATONIC_TRIADS)
+ * @param {object} options - Opciones globales { globalChordRepeat, globalNoteRepeat }
+ * @returns {Array<object>} Secuencia lineal de notas con metadatos contextuales
+ */
 export function buildCompiledProgression(
   steps = [],
   positions = C_MAJOR_POSITIONS,
-  triads = DIATONIC_TRIADS
+  triads = DIATONIC_TRIADS,
+  options = {}
 ) {
   if (!Array.isArray(steps) || steps.length === 0) return [];
 
+  const { globalChordRepeat = 1, globalNoteRepeat = 1 } = options;
   const compiledSequence = [];
 
   steps.forEach((step, stepIndex) => {
     const position = positions.find((p) => p.id === step.positionId) || positions[0];
     const triad = triads.find((t) => t.id === step.triadId) || triads[0];
-    const notes = buildStepNoteSequence(position, triad, step.direction || 'ASC');
+    const baseNotes = buildStepNoteSequence(position, triad, step.direction || 'ASC');
 
-    notes.forEach((note, noteIndexInStep) => {
-      const isFirstInStep = noteIndexInStep === 0;
-      const isLastInStep = noteIndexInStep === notes.length - 1;
+    const chordRepetitions = Math.max(1, Math.min(8, Number(step.repetitions || globalChordRepeat) || 1));
+    const noteRepetitions = Math.max(1, Math.min(4, Number(step.noteRepeat || globalNoteRepeat) || 1));
 
-      compiledSequence.push({
-        ...note,
-        stepId: step.id,
-        stepIndex,
-        triadId: triad.id,
-        triadSymbol: triad.simbolo,
-        triadName: triad.nombre,
-        triadDegree: triad.gradoRomano,
-        positionId: position.id,
-        positionName: position.nombre,
-        direction: step.direction || 'ASC',
-        noteIndexInStep,
-        totalNotesInStep: notes.length,
-        isFirstInStep,
-        isLastInStep,
-        // ID único para esta instancia particular en la progresión
-        progressionEventId: `prog-${step.id}-${stepIndex}-${note.id}-${noteIndexInStep}`
+    for (let cRep = 0; cRep < chordRepetitions; cRep++) {
+      baseNotes.forEach((note, noteIndexInBase) => {
+        for (let nRep = 0; nRep < noteRepetitions; nRep++) {
+          const isFirstInStep = cRep === 0 && noteIndexInBase === 0 && nRep === 0;
+          const isLastInStep =
+            cRep === chordRepetitions - 1 &&
+            noteIndexInBase === baseNotes.length - 1 &&
+            nRep === noteRepetitions - 1;
+
+          compiledSequence.push({
+            ...note,
+            stepId: step.id,
+            stepIndex,
+            chordRepetitionIndex: cRep,
+            totalChordRepetitions: chordRepetitions,
+            noteRepetitionIndex: nRep,
+            totalNoteRepetitions: noteRepetitions,
+            triadId: triad.id,
+            triadSymbol: triad.simbolo,
+            triadName: triad.nombre,
+            triadDegree: triad.gradoRomano,
+            positionId: position.id,
+            positionName: position.nombre,
+            direction: step.direction || 'ASC',
+            noteIndexInStep: noteIndexInBase,
+            totalNotesInStep: baseNotes.length,
+            isFirstInStep,
+            isLastInStep,
+            // ID único para esta instancia particular en la progresión
+            progressionEventId: `prog-${step.id}-${stepIndex}-${cRep}-${note.id}-${noteIndexInBase}-${nRep}`
+          });
+        }
       });
-    });
+    }
   });
 
   return compiledSequence;
@@ -175,6 +205,7 @@ export function buildCompiledProgression(
 
 /**
  * Valida y sanea un objeto de progresión proveniente de almacenamiento local o usuario.
+ * Contempla compatibilidad hacia atrás y control de versiones de esquema.
  * @param {any} raw - Dato crudo
  * @returns {object|null} Progresión sanitizada o null si es inválida
  */
@@ -188,6 +219,7 @@ export function sanitizeProgression(raw) {
   const id = typeof raw.id === 'string' && raw.id.trim() ? raw.id.trim() : `prog-${Date.now()}`;
   const name = typeof raw.name === 'string' && raw.name.trim() ? raw.name.trim().slice(0, 60) : 'Mi Progresión';
   const description = typeof raw.description === 'string' ? raw.description.slice(0, 200) : '';
+  const schemaVersion = Number(raw.schemaVersion) || 1;
 
   if (!Array.isArray(raw.steps) || raw.steps.length === 0) {
     return null;
@@ -199,13 +231,15 @@ export function sanitizeProgression(raw) {
     const triadId = validTriadIds.has(s.triadId) ? s.triadId : 'C';
     const positionId = validPositionIds.has(Number(s.positionId)) ? Number(s.positionId) : 1;
     const direction = validDirections.has(s.direction) ? s.direction : 'ASC';
+    const repetitions = Math.max(1, Math.min(8, Number(s.repetitions) || 1));
     const stepId = typeof s.id === 'string' && s.id.trim() ? s.id.trim() : `step-${idx + 1}-${Date.now()}`;
 
     sanitizedSteps.push({
       id: stepId,
       triadId,
       positionId,
-      direction
+      direction,
+      repetitions
     });
   });
 
@@ -215,6 +249,7 @@ export function sanitizeProgression(raw) {
     id,
     name,
     description,
+    schemaVersion,
     steps: sanitizedSteps,
     updatedAt: Number(raw.updatedAt) || Date.now()
   };

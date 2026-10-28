@@ -11,7 +11,10 @@ import {
   BookOpen,
   HelpCircle,
   EyeOff,
-  Eye
+  Eye,
+  Headphones,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 import ProgressionBuilder from './ProgressionBuilder';
 import ProgressionPlaybackBar from './ProgressionPlaybackBar';
@@ -55,8 +58,10 @@ export default function ProgressionView({
     return list[0] || DEFAULT_PRESET_PROGRESSIONS[0];
   });
 
-  // Modo de práctica: 'guided' (guiada con notas visibles) | 'memory' (de memoria sin etiquetas)
+  // Modo de práctica: 'guided' (guiada con notas visibles) | 'memory' (de memoria sin etiquetas) | 'ear' (entrenamiento auditivo)
   const [practiceMode, setPracticeMode] = useState('guided');
+  const [earGuessFeedback, setEarGuessFeedback] = useState(null);
+  const [revealedInEarMode, setRevealedInEarMode] = useState(false);
 
   // Ajustes de visualización
   const [labelMode, setLabelMode] = useState('note'); // 'note' | 'interval'
@@ -82,8 +87,11 @@ export default function ProgressionView({
     bpm,
     chordGapMs,
     isLooping,
+    chordRepeat,
+    noteRepeat,
     globalPointer,
     currentEvent,
+    activeEvent,
     currentStep,
     currentStepIndex,
     currentTriad,
@@ -97,7 +105,9 @@ export default function ProgressionView({
     jumpToStep,
     setBpm,
     setChordGapMs,
-    setIsLooping
+    setIsLooping,
+    setChordRepeat,
+    setNoteRepeat
   } = useProgressionSequencer({
     steps: currentProgression?.steps || [],
     playNote,
@@ -106,6 +116,27 @@ export default function ProgressionView({
     defaultLoop: true,
     onStopAudio: stopAllNotes
   });
+
+  // Reiniciar feedback de entrenamiento auditivo al cambiar de acorde
+  useEffect(() => {
+    setEarGuessFeedback(null);
+    setRevealedInEarMode(false);
+  }, [currentStepIndex]);
+
+  const handleEarGuess = (triadId) => {
+    if (triadId === currentTriad.id) {
+      setEarGuessFeedback({
+        correct: true,
+        message: `¡Excelente! Has identificado el grado ${currentTriad.gradoRomano} (${currentTriad.nombre})`
+      });
+      setRevealedInEarMode(true);
+    } else {
+      setEarGuessFeedback({
+        correct: false,
+        message: `Ese no es el acorde. ¡Escucha la cualidad de las 3 notas e intenta de nuevo!`
+      });
+    }
+  };
 
   // Sincronizar persistencia cuando cambia la lista de guardados
   useEffect(() => {
@@ -274,7 +305,7 @@ export default function ProgressionView({
         </div>
       )}
 
-      {/* 1. Header de Navegación Superior */}
+      {/* 1. Subheader de Navegación */}
       <header className="sticky top-0 z-30 bg-[#0A0A0B]/90 backdrop-blur-md border-b border-[#202022] px-4 sm:px-6 py-3">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -308,7 +339,7 @@ export default function ProgressionView({
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Selector de Modo de Práctica */}
+            {/* Selector de Modo de Práctica: Guiada, De Memoria, Por Oído */}
             <div className="flex bg-[#0E0E10] border border-[#2A2A2E] rounded-lg p-0.5 text-xs">
               <button
                 onClick={() => setPracticeMode('guided')}
@@ -334,6 +365,19 @@ export default function ProgressionView({
               >
                 <EyeOff className="w-3.5 h-3.5 text-[#C6A15B]" />
                 <span className="hidden md:inline">De Memoria</span>
+              </button>
+
+              <button
+                onClick={() => setPracticeMode('ear')}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer ${
+                  practiceMode === 'ear'
+                    ? 'bg-[#202022] text-[#2DD4BF] border border-[#2DD4BF]/50'
+                    : 'text-[#71717A] hover:text-[#F1F0EC]'
+                }`}
+                title="Práctica por Oído: reproduce la progresión y adivina el acorde o grado diatónico"
+              >
+                <Headphones className="w-3.5 h-3.5 text-[#2DD4BF]" />
+                <span className="hidden md:inline">Por Oído</span>
               </button>
             </div>
 
@@ -480,14 +524,16 @@ export default function ProgressionView({
           bpm={bpm}
           chordGapMs={chordGapMs}
           isLooping={isLooping}
+          chordRepeat={chordRepeat}
+          noteRepeat={noteRepeat}
           currentStepIndex={currentStepIndex}
           totalSteps={currentProgression.steps.length}
           currentTriad={currentTriad}
           currentPosition={currentPosition}
-          activeNote={currentEvent}
+          activeNote={activeEvent}
           globalPointer={globalPointer}
           totalEvents={totalEvents}
-          labelMode={practiceMode === 'memory' ? 'none' : labelMode}
+          labelMode={practiceMode === 'memory' ? 'none' : practiceMode === 'ear' && !revealedInEarMode ? 'none' : labelMode}
           showPassingNotes={showPassingNotes}
           onTogglePlay={togglePlay}
           onStop={stop}
@@ -495,10 +541,78 @@ export default function ProgressionView({
           onNextStep={handleNextStep}
           onBpmChange={setBpm}
           onChordGapChange={setChordGapMs}
+          onChordRepeatChange={setChordRepeat}
+          onNoteRepeatChange={setNoteRepeat}
           onToggleLoop={() => setIsLooping(!isLooping)}
           onToggleLabelMode={() => setLabelMode(labelMode === 'note' ? 'interval' : 'note')}
           onToggleShowPassingNotes={() => setShowPassingNotes(!showPassingNotes)}
         />
+
+        {/* 4b. Módulo de Práctica por Oído (Entrenamiento Auditivo Interactivo) */}
+        {practiceMode === 'ear' && (
+          <div className="bg-[#151516] border border-[#2DD4BF]/40 rounded-xl p-4 sm:p-5 shadow-xl space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#242428] pb-3">
+              <div className="flex items-center gap-2">
+                <Headphones className="w-4 h-4 text-[#2DD4BF]" />
+                <h3 className="text-xs font-semibold text-[#F1F0EC] tracking-wider uppercase">
+                  Entrenamiento Auditivo • Paso {currentStepIndex + 1} de {currentProgression.steps.length}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRevealedInEarMode(!revealedInEarMode)}
+                className="text-xs text-[#2DD4BF] hover:underline cursor-pointer font-medium"
+              >
+                {revealedInEarMode ? 'Ocultar solución' : 'Revelar solución'}
+              </button>
+            </div>
+
+            <p className="text-xs text-[#A09FA3]">
+              Escucha el arpegio en reproducción e identifica el grado diatónico o acorde actual:
+            </p>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
+              {DIATONIC_TRIADS.map((triad) => {
+                const isCurrent = triad.id === currentTriad.id;
+                const isSelected = revealedInEarMode && isCurrent;
+
+                return (
+                  <button
+                    key={triad.id}
+                    type="button"
+                    onClick={() => handleEarGuess(triad.id)}
+                    className={`p-2.5 rounded-lg border text-xs font-mono font-medium transition-all cursor-pointer flex flex-col items-center justify-center gap-1 ${
+                      isSelected
+                        ? 'bg-[#2DD4BF]/20 border-[#2DD4BF] text-[#2DD4BF] font-bold shadow-md'
+                        : 'bg-[#0E0E10] border-[#2A2A2E] text-[#F1F0EC] hover:border-[#2DD4BF]/50'
+                    }`}
+                  >
+                    <span className="text-sm font-bold">{triad.gradoRomano}</span>
+                    <span className="text-[11px] text-[#A09FA3]">{triad.simbolo}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Banner de Feedback inmediato */}
+            {earGuessFeedback && (
+              <div
+                className={`flex items-center gap-2 p-2.5 rounded-lg text-xs font-medium ${
+                  earGuessFeedback.correct
+                    ? 'bg-emerald-950/60 border border-emerald-500/40 text-emerald-300'
+                    : 'bg-amber-950/60 border border-amber-500/40 text-amber-300'
+                }`}
+              >
+                {earGuessFeedback.correct ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+                )}
+                <span>{earGuessFeedback.message}</span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* 5. Diapasón SVG Sincronizado Dinámicamente */}
         <div className="space-y-2">
@@ -506,21 +620,33 @@ export default function ProgressionView({
             <h3 className="text-xs font-semibold text-[#F1F0EC] tracking-wider uppercase flex items-center gap-2">
               <Layers className="w-4 h-4 text-[#C6A15B]" />
               <span>
-                Diapasón Adaptativo • Acorde Actual: {currentTriad?.nombre} ({currentTriad?.simbolo}) en Posición {currentPosition?.numero}
+                {practiceMode === 'ear' && !revealedInEarMode
+                  ? `Diapasón Adaptativo • Acorde Oculto (Paso ${currentStepIndex + 1}) en Posición ${currentPosition?.numero}`
+                  : `Diapasón Adaptativo • Acorde Actual: ${currentTriad?.nombre} (${currentTriad?.simbolo}) en Posición ${currentPosition?.numero}`}
               </span>
             </h3>
             <span className="text-[11px] text-[#A09FA3]">
               {practiceMode === 'memory'
                 ? 'Modo de Memoria Activo (Visualiza mentalmente las notas)'
-                : 'Trastes ' + currentPosition?.trasteMin + ' a ' + currentPosition?.trasteMax}
+                : practiceMode === 'ear' && !revealedInEarMode
+                  ? 'Modo Auditivo (Escucha y deduce el acorde)'
+                  : 'Trastes ' + currentPosition?.trasteMin + ' a ' + currentPosition?.trasteMax}
             </span>
           </div>
 
           <Fretboard
             position={currentPosition}
             triad={currentTriad}
-            labelMode={practiceMode === 'memory' ? 'none' : labelMode}
-            showPassingNotes={practiceMode === 'memory' ? false : showPassingNotes}
+            labelMode={
+              practiceMode === 'memory' || (practiceMode === 'ear' && !revealedInEarMode)
+                ? 'none'
+                : labelMode
+            }
+            showPassingNotes={
+              practiceMode === 'memory' || (practiceMode === 'ear' && !revealedInEarMode)
+                ? false
+                : showPassingNotes
+            }
             activeNoteId={activeNoteId}
             onNoteClick={(note) => {
               if (note) playNote(note.midi, 1.2);

@@ -22,6 +22,8 @@ export default function ProgressionPlaybackBar({
   bpm = 80,
   chordGapMs = 200,
   isLooping = true,
+  chordRepeat = 1,
+  noteRepeat = 1,
   currentStepIndex = 0,
   totalSteps = 4,
   currentTriad,
@@ -37,6 +39,8 @@ export default function ProgressionPlaybackBar({
   onNextStep,
   onBpmChange,
   onChordGapChange,
+  onChordRepeatChange,
+  onNoteRepeatChange,
   onToggleLoop,
   onToggleLabelMode,
   onToggleShowPassingNotes
@@ -175,6 +179,50 @@ export default function ProgressionPlaybackBar({
               {bpm}
             </span>
           </div>
+
+          {/* Repetición de cada acorde */}
+          {onChordRepeatChange && (
+            <div className="flex items-center gap-1 bg-[#0E0E10] border border-[#242428] rounded-lg p-1 text-[11px] font-mono">
+              <span className="text-[#71717A] px-1 hidden sm:inline">Acorde:</span>
+              {[1, 2, 4].map((rep) => (
+                <button
+                  key={`chord-rep-${rep}`}
+                  type="button"
+                  onClick={() => onChordRepeatChange(rep)}
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors cursor-pointer ${
+                    chordRepeat === rep
+                      ? 'bg-[#202022] text-[#C6A15B] border border-[#C6A15B]/30'
+                      : 'text-[#71717A] hover:text-[#F1F0EC]'
+                  }`}
+                  title={`Repetir cada acorde ${rep} vez${rep > 1 ? 'es' : ''}`}
+                >
+                  {rep}x
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Repetición de cada nota */}
+          {onNoteRepeatChange && (
+            <div className="flex items-center gap-1 bg-[#0E0E10] border border-[#242428] rounded-lg p-1 text-[11px] font-mono">
+              <span className="text-[#71717A] px-1 hidden sm:inline">Nota:</span>
+              {[1, 2].map((rep) => (
+                <button
+                  key={`note-rep-${rep}`}
+                  type="button"
+                  onClick={() => onNoteRepeatChange(rep)}
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors cursor-pointer ${
+                    noteRepeat === rep
+                      ? 'bg-[#202022] text-[#C6A15B] border border-[#C6A15B]/30'
+                      : 'text-[#71717A] hover:text-[#F1F0EC]'
+                  }`}
+                  title={`Pulsar cada nota ${rep} vez${rep > 1 ? 'es' : ''}`}
+                >
+                  {rep}x
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Separación entre acordes (Pausa / Respiración) */}
           <div className="flex items-center gap-1 bg-[#0E0E10] border border-[#242428] rounded-lg p-1 text-[11px] font-mono">

@@ -94,9 +94,9 @@ export default function ProgressionBuilder({
                 </div>
               </div>
 
-              {/* Bloque Central: Selectores rápidos (Acorde, Dirección, Posición 3NPS) */}
+              {/* Bloque Central: Selectores rápidos (Acorde, Dirección, Posición 3NPS, Repetición) */}
               <div
-                className="grid grid-cols-1 sm:grid-cols-3 gap-2 flex-1 md:max-w-2xl"
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 flex-1 md:max-w-3xl"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* 1. Selector de Tríada Diatónica */}
@@ -134,7 +134,7 @@ export default function ProgressionBuilder({
                       title="Ascendente (Grave a Agudo)"
                     >
                       <ArrowUpRight className="w-3.5 h-3.5" />
-                      <span className="hidden lg:inline text-[10px]">Asc</span>
+                      <span className="text-[10px]">Asc</span>
                     </button>
 
                     <button
@@ -148,7 +148,7 @@ export default function ProgressionBuilder({
                       title="Descendente (Agudo a Grave)"
                     >
                       <ArrowDownRight className="w-3.5 h-3.5" />
-                      <span className="hidden lg:inline text-[10px]">Desc</span>
+                      <span className="text-[10px]">Desc</span>
                     </button>
 
                     <button
@@ -162,7 +162,7 @@ export default function ProgressionBuilder({
                       title="Ambas (Ida y Vuelta)"
                     >
                       <ArrowUpDown className="w-3.5 h-3.5" />
-                      <span className="hidden lg:inline text-[10px]">Ida/Vta</span>
+                      <span className="text-[10px]">Ambas</span>
                     </button>
                   </div>
                 </div>
@@ -183,6 +183,30 @@ export default function ProgressionBuilder({
                       </option>
                     ))}
                   </select>
+                </div>
+
+                {/* 4. Repeticiones de este Acorde */}
+                <div>
+                  <label className="block text-[10px] uppercase font-mono text-[#71717A] mb-1">
+                    Repetición
+                  </label>
+                  <div className="grid grid-cols-3 gap-1 bg-[#18181A] border border-[#2A2A2E] rounded-md p-0.5">
+                    {[1, 2, 4].map((rep) => (
+                      <button
+                        key={rep}
+                        type="button"
+                        onClick={() => onUpdateStep(index, { repetitions: rep })}
+                        className={`py-1 rounded text-[11px] font-medium transition-colors cursor-pointer ${
+                          (step.repetitions || 1) === rep
+                            ? 'bg-[#2A2A2E] text-[#C6A15B] border border-[#C6A15B]/40 font-bold shadow-sm'
+                            : 'text-[#71717A] hover:text-[#F1F0EC]'
+                        }`}
+                        title={`Tocar este arpegio ${rep} vez${rep > 1 ? 'es' : ''}`}
+                      >
+                        {rep}x
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 

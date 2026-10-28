@@ -32,15 +32,19 @@ export function useGuitarAudio() {
 
   /**
    * Reproduce una nota dado su número MIDI con duración adaptativa.
+   * Admite planificación temporal mediante el reloj de Web Audio API (startTime).
    * @param {number} midi - Número MIDI de la nota (ej. 48 para C3, 60 para C4)
    * @param {number} duration - Duración estimada en segundos (default 1.2s)
+   * @param {number|null} startTime - Tiempo de inicio en el reloj de AudioContext (ctx.currentTime)
    */
-  const playNote = useCallback((midi, duration = 1.2) => {
+  const playNote = useCallback((midi, duration = 1.2, startTime = null) => {
     try {
       const ctx = getAudioContext();
       if (!ctx) return;
 
-      const now = ctx.currentTime;
+      const now = (typeof startTime === 'number' && startTime >= ctx.currentTime)
+        ? startTime
+        : ctx.currentTime;
       const freq = getFrequency(midi);
 
       // Gestión de polifonía: si hay más de 3 notas activas sonando,

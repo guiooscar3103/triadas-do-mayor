@@ -21,6 +21,8 @@ export function useProgressionSequencer({
   defaultBpm = 80,
   defaultChordGapMs = 200,
   defaultLoop = true,
+  defaultChordRepeat = 1,
+  defaultNoteRepeat = 1,
   onStopAudio = () => {}
 }) {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -28,6 +30,8 @@ export function useProgressionSequencer({
   const [bpm, setBpm] = useState(defaultBpm);
   const [chordGapMs, setChordGapMs] = useState(defaultChordGapMs);
   const [isLooping, setIsLooping] = useState(defaultLoop);
+  const [chordRepeat, setChordRepeat] = useState(defaultChordRepeat);
+  const [noteRepeat, setNoteRepeat] = useState(defaultNoteRepeat);
 
   // Puntero global de evento en la secuencia lineal compilada
   const [globalPointer, setGlobalPointer] = useState(0);
@@ -47,8 +51,11 @@ export function useProgressionSequencer({
 
   // Compilar la lista lineal de eventos de notas a partir de los pasos
   const compiledSequence = useMemo(() => {
-    return buildCompiledProgression(steps, C_MAJOR_POSITIONS, DIATONIC_TRIADS);
-  }, [steps]);
+    return buildCompiledProgression(steps, C_MAJOR_POSITIONS, DIATONIC_TRIADS, {
+      globalChordRepeat: chordRepeat,
+      globalNoteRepeat: noteRepeat
+    });
+  }, [steps, chordRepeat, noteRepeat]);
 
   // Sincronizar referencias
   useEffect(() => {
@@ -101,17 +108,19 @@ export function useProgressionSequencer({
     }
   }, [clearActiveTimer]);
 
-  // Pausar conservando la posición
+  // Pausar conservando la posición exacta
   const pause = useCallback(() => {
     clearActiveTimer();
     isPlayingRef.current = false;
     isPausedRef.current = true;
+    // Asegurar que el puntero retiene la nota activa actual en la pantalla
+    pointerRef.current = globalPointer;
     setIsPlaying(false);
     setIsPaused(true);
     if (typeof onStopAudioRef.current === 'function') {
       onStopAudioRef.current();
     }
-  }, [clearActiveTimer]);
+  }, [clearActiveTimer, globalPointer]);
 
   // Programación recursiva del siguiente paso
   const scheduleStep = useCallback(() => {
@@ -278,19 +287,25 @@ export function useProgressionSequencer({
     return C_MAJOR_POSITIONS.find((p) => p.id === currentEvent.positionId) || C_MAJOR_POSITIONS[0];
   }, [currentEvent, steps]);
 
+  const activeEvent = (isPlaying || isPaused) ? currentEvent : null;
+  const activeNoteId = activeEvent ? activeEvent.id : null;
+
   return {
     isPlaying,
     isPaused,
     bpm,
     chordGapMs,
     isLooping,
+    chordRepeat,
+    noteRepeat,
     globalPointer,
     currentEvent,
+    activeEvent,
     currentStep,
     currentStepIndex: currentEvent ? currentEvent.stepIndex : 0,
     currentTriad,
     currentPosition,
-    activeNoteId: currentEvent ? currentEvent.id : null,
+    activeNoteId,
     totalEvents: compiledSequence.length,
     compiledSequence,
     play,
@@ -300,7 +315,9 @@ export function useProgressionSequencer({
     jumpToStep,
     setBpm: handleSetBpm,
     setChordGapMs: handleSetChordGapMs,
-    setIsLooping
+    setIsLooping,
+    setChordRepeat,
+    setNoteRepeat
   };
 }
 
