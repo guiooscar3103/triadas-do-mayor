@@ -194,7 +194,7 @@ export default function ProgressionPlaybackBar({
                       ? 'bg-[#202022] text-[#C6A15B] border border-[#C6A15B]/30'
                       : 'text-[#71717A] hover:text-[#F1F0EC]'
                   }`}
-                  title={`Repetir cada acorde ${rep} vez${rep > 1 ? 'es' : ''}`}
+                  title={`Repetir cada acorde ${rep} ${rep === 1 ? 'vez' : 'veces'}`}
                 >
                   {rep}x
                 </button>
@@ -216,7 +216,7 @@ export default function ProgressionPlaybackBar({
                       ? 'bg-[#202022] text-[#C6A15B] border border-[#C6A15B]/30'
                       : 'text-[#71717A] hover:text-[#F1F0EC]'
                   }`}
-                  title={`Pulsar cada nota ${rep} vez${rep > 1 ? 'es' : ''}`}
+                  title={`Pulsar cada nota ${rep} ${rep === 1 ? 'vez' : 'veces'}`}
                 >
                   {rep}x
                 </button>

@@ -201,7 +201,7 @@ export default function ProgressionBuilder({
                             ? 'bg-[#2A2A2E] text-[#C6A15B] border border-[#C6A15B]/40 font-bold shadow-sm'
                             : 'text-[#71717A] hover:text-[#F1F0EC]'
                         }`}
-                        title={`Tocar este arpegio ${rep} vez${rep > 1 ? 'es' : ''}`}
+                        title={`Tocar este arpegio ${rep} ${rep === 1 ? 'vez' : 'veces'}`}
                       >
                         {rep}x
                       </button>
