@@ -11,6 +11,7 @@ import ProgressionView from '../../components/progression/ProgressionView';
  * y diseño del módulo original sin alterar su lógica ni componentes.
  */
 export default function TriadsModule({
+  isActive = true,
   onStateChange = () => {},
   onBackToMainDashboard = () => {}
 }) {
@@ -75,6 +76,7 @@ export default function TriadsModule({
       {/* 2. Vista de Estudio Detallado de Posición */}
       {currentView === 'STUDY' && (
         <StudyView
+          isActive={isActive && currentView === 'STUDY'}
           positionId={selectedPositionId}
           onBackToDashboard={handleBackToCatalog}
           onChangePosition={handleChangePosition}
@@ -85,6 +87,7 @@ export default function TriadsModule({
       {/* 3. Vista de Creador de Progresiones Armónicas */}
       {currentView === 'PROGRESSIONS' && (
         <ProgressionView
+          isActive={isActive && currentView === 'PROGRESSIONS'}
           onBackToDashboard={handleBackToCatalog}
           onGoToStudyMode={handleSelectPosition}
         />

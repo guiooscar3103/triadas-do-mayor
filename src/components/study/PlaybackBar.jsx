@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   Play,
   Pause,
@@ -9,7 +9,10 @@ import {
   Eye,
   EyeOff,
   Hash,
-  Type
+  Type,
+  Volume2,
+  Volume1,
+  VolumeX
 } from 'lucide-react';
 
 export default function PlaybackBar({
@@ -20,6 +23,8 @@ export default function PlaybackBar({
   onStop,
   onBpmChange,
   onDirectionChange,
+  volume = 0.8,
+  onVolumeChange = () => {},
   labelMode,
   onToggleLabelMode,
   showPassingNotes,
@@ -27,6 +32,16 @@ export default function PlaybackBar({
   activeNote,
   arpeggioCount
 }) {
+  const lastVolumeRef = useRef(volume > 0 ? volume : 0.8);
+
+  const handleToggleMute = () => {
+    if (volume > 0) {
+      lastVolumeRef.current = volume;
+      onVolumeChange(0);
+    } else {
+      onVolumeChange(lastVolumeRef.current || 0.8);
+    }
+  };
   return (
     <div className="bg-[#151516] border border-[#242428] rounded-xl p-3 sm:p-3.5">
       <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
@@ -84,26 +99,68 @@ export default function PlaybackBar({
           )}
         </div>
 
-        {/* Sección Central: Control de Tempo (BPM) */}
-        <div className="flex items-center gap-3 bg-[#0E0E10] px-3.5 py-2 rounded-lg border border-[#202022]">
-          <div className="flex items-center gap-1.5 text-xs text-[#A09FA3]">
-            <Sliders className="w-3.5 h-3.5 text-[#C6A15B]" />
-            <span className="font-medium text-[11px]">Tempo:</span>
+        {/* Sección Central: Controles de Tempo (BPM) y Volumen */}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          {/* Control de Tempo (BPM) */}
+          <div className="flex items-center gap-2.5 bg-[#0E0E10] px-3 py-1.5 rounded-lg border border-[#202022]">
+            <div className="flex items-center gap-1.5 text-xs text-[#A09FA3]">
+              <Sliders className="w-3.5 h-3.5 text-[#C6A15B]" />
+              <span className="font-medium text-[11px] hidden sm:inline">Tempo:</span>
+            </div>
+
+            <input
+              type="range"
+              min="40"
+              max="180"
+              step="2"
+              value={bpm}
+              onChange={(e) => onBpmChange(Number(e.target.value))}
+              className="w-20 sm:w-28 accent-[#C6A15B] cursor-pointer"
+            />
+
+            <div className="flex items-baseline gap-1 font-mono min-w-[45px]">
+              <span className="text-xs font-bold text-[#F1F0EC]">{bpm}</span>
+              <span className="text-[9px] text-[#68676B]">BPM</span>
+            </div>
           </div>
 
-          <input
-            type="range"
-            min="40"
-            max="180"
-            step="2"
-            value={bpm}
-            onChange={(e) => onBpmChange(Number(e.target.value))}
-            className="w-24 sm:w-32 accent-[#C6A15B] cursor-pointer"
-          />
+          {/* Control de Volumen de Guitarra */}
+          <div className="flex items-center gap-2 bg-[#0E0E10] px-2.5 sm:px-3 py-1.5 rounded-lg border border-[#202022]">
+            <button
+              type="button"
+              onClick={handleToggleMute}
+              className={`p-1 rounded transition-colors cursor-pointer ${
+                volume === 0
+                  ? 'text-red-400 hover:text-red-300'
+                  : 'text-[#C6A15B] hover:text-[#E2C382]'
+              }`}
+              title={volume === 0 ? 'Activar sonido de guitarra' : 'Silenciar guitarra'}
+            >
+              {volume === 0 ? (
+                <VolumeX className="w-3.5 h-3.5" />
+              ) : volume < 0.5 ? (
+                <Volume1 className="w-3.5 h-3.5" />
+              ) : (
+                <Volume2 className="w-3.5 h-3.5" />
+              )}
+            </button>
 
-          <div className="flex items-baseline gap-1 font-mono">
-            <span className="text-xs font-bold text-[#F1F0EC]">{bpm}</span>
-            <span className="text-[9px] text-[#68676B]">BPM</span>
+            <span className="text-[#A09FA3] text-[11px] hidden sm:inline font-mono">Vol:</span>
+
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.05"
+              value={volume}
+              onChange={(e) => onVolumeChange(Number(e.target.value))}
+              className="w-16 sm:w-20 accent-[#C6A15B] cursor-pointer"
+              title={`Volumen: ${Math.round(volume * 100)}%`}
+            />
+
+            <span className="text-xs font-mono font-bold text-[#F1F0EC] min-w-[28px] text-right">
+              {Math.round(volume * 100)}%
+            </span>
           </div>
         </div>
 

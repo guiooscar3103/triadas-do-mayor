@@ -1,4 +1,5 @@
 import React from 'react';
+import portadaImg from '../../assets/images/portada.jpg';
 import {
   Layers,
   Music,
@@ -69,12 +70,31 @@ export default function MainDashboard({
       {/* ======================================================== */}
       {/* HERO / ENCABEZADO PRINCIPAL                              */}
       {/* ======================================================== */}
-      <section className="relative border-b border-[#202022] bg-[#0E0E10] pt-14 pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <section className="relative border-b border-[#202022] bg-[#0E0E10] pt-6 sm:pt-8 pb-14 px-4 sm:px-6 lg:px-8 overflow-hidden">
         {/* Luces ambientales sutiles */}
         <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#C6A15B]/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-20 left-1/3 w-80 h-80 bg-[#2DD4BF]/5 rounded-full blur-3xl pointer-events-none" />
 
         <div className="max-w-7xl mx-auto relative z-10">
+          {/* Banner Hero con integración progresiva al fondo oscuro */}
+          <div className="relative w-full overflow-hidden mb-8 sm:mb-10 select-none pointer-events-none">
+            <img
+              src={portadaImg}
+              alt="Guitar Study - Portada del Centro de Estudio"
+              className="w-full h-auto max-h-[380px] sm:max-h-[440px] object-cover object-center"
+              style={{
+                WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 50%, rgba(0,0,0,0.6) 75%, rgba(0,0,0,0) 100%)',
+                maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 50%, rgba(0,0,0,0.6) 75%, rgba(0,0,0,0) 100%)'
+              }}
+              loading="eager"
+            />
+            {/* Fallback y refuerzo cromático progresivo hacia #0E0E10 */}
+            <div
+              className="absolute inset-0 bg-gradient-to-t from-[#0E0E10] via-[#0E0E10]/30 to-transparent pointer-events-none"
+              aria-hidden="true"
+            />
+          </div>
+
           {/* Badge superior de estatus */}
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-medium bg-[#151516] border border-[#303034] text-[#C6A15B] mb-6">
             <span className="w-1.5 h-1.5 rounded-full bg-[#C6A15B] animate-pulse" />
@@ -85,28 +105,30 @@ export default function MainDashboard({
             <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-[#F1F0EC] mb-4 leading-tight">
               Domina la armonía y la geometría del <span className="text-[#C6A15B]">diapasón</span>
             </h1>
-            <p className="text-base sm:text-lg text-[#A09FA3] leading-relaxed">
+            <p className="text-base sm:text-lg text-slate-300 font-normal leading-relaxed">
               Plataforma modular para el estudio riguroso de la guitarra moderna. Explora las siete posiciones diatónicas mediante el sistema de 3 notas por cuerda (3NPS), conecta escalas y arpegios con audio interactivo en tiempo real.
             </p>
           </div>
 
-          {/* Estadísticas rápidas globales */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 max-w-2xl">
-            <div className="bg-[#151516]/80 border border-[#242428] rounded-lg p-3">
-              <div className="text-2xl font-bold font-mono text-[#F1F0EC]">7</div>
-              <div className="text-[11px] text-[#A09FA3] mt-0.5">Posiciones Diatónicas</div>
-            </div>
-            <div className="bg-[#151516]/80 border border-[#242428] rounded-lg p-3">
-              <div className="text-2xl font-bold font-mono text-[#C6A15B]">3NPS</div>
-              <div className="text-[11px] text-[#A09FA3] mt-0.5">Notas por Cuerda</div>
-            </div>
-            <div className="bg-[#151516]/80 border border-[#242428] rounded-lg p-3">
-              <div className="text-2xl font-bold font-mono text-[#2DD4BF]">100%</div>
-              <div className="text-[11px] text-[#A09FA3] mt-0.5">Interactividad & Audio</div>
-            </div>
-            <div className="bg-[#151516]/80 border border-[#242428] rounded-lg p-3">
-              <div className="text-2xl font-bold font-mono text-[#F1F0EC]">8vb</div>
-              <div className="text-[11px] text-[#A09FA3] mt-0.5">Notación Real</div>
+          {/* Estadísticas rápidas globales (bloque ligero unificado) */}
+          <div className="mt-8 max-w-2xl rounded-xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm">
+            <div className="grid grid-cols-2 sm:grid-cols-4">
+              <div className="px-4 py-3 border-b sm:border-b-0 border-r border-white/[0.06]">
+                <div className="text-2xl font-bold font-mono text-[#F1F0EC] tracking-tight">7</div>
+                <div className="text-xs font-medium text-slate-400 mt-0.5">Posiciones Diatónicas</div>
+              </div>
+              <div className="px-4 py-3 border-b sm:border-b-0 sm:border-r border-white/[0.06]">
+                <div className="text-2xl font-bold font-mono text-[#C6A15B] tracking-tight">3NPS</div>
+                <div className="text-xs font-medium text-slate-400 mt-0.5">Notas por Cuerda</div>
+              </div>
+              <div className="px-4 py-3 border-r sm:border-r border-white/[0.06]">
+                <div className="text-2xl font-bold font-mono text-[#2DD4BF] tracking-tight">100%</div>
+                <div className="text-xs font-medium text-slate-400 mt-0.5">Interactividad & Audio</div>
+              </div>
+              <div className="px-4 py-3">
+                <div className="text-2xl font-bold font-mono text-[#F1F0EC] tracking-tight">8vb</div>
+                <div className="text-xs font-medium text-slate-400 mt-0.5">Notación Real</div>
+              </div>
             </div>
           </div>
         </div>
@@ -121,20 +143,29 @@ export default function MainDashboard({
             <Guitar className="w-6 h-6 text-[#C6A15B]" />
             <span>Módulos de Estudio Activos</span>
           </h2>
-          <p className="text-sm text-[#8A898D] mt-1">
+          <p className="text-sm text-zinc-400 mt-1">
             Selecciona un área de práctica para abrir su entorno de trabajo interactivo.
           </p>
         </div>
 
         {/* Grid de las 2 tarjetas principales */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-16">
-          
+
           {/* ==================================================== */}
           {/* TARJETA 1: ESCALA MAYOR 3NPS                         */}
           {/* ==================================================== */}
           <div
+            role="button"
+            tabIndex={0}
             onClick={onSelectScales}
-            className="group relative bg-[#141416] hover:bg-[#18181C] border border-[#26262B] hover:border-[#2DD4BF]/60 rounded-2xl p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 shadow-xl hover:shadow-[#2DD4BF]/10 cursor-pointer overflow-hidden"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onSelectScales();
+              }
+            }}
+            aria-label="Abrir módulo de estudio de las siete posiciones de la escala mayor"
+            className="group relative bg-[#141416] hover:bg-[#18181C] border border-[#26262B] hover:border-[#2DD4BF]/60 rounded-2xl p-6 sm:p-8 flex flex-col justify-between transition-all duration-200 shadow-xl hover:shadow-[#2DD4BF]/10 cursor-pointer overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0B] focus-visible:ring-[#2DD4BF] motion-reduce:transition-none"
           >
             {/* Resplandor superior turquesa */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#2DD4BF]/10 rounded-full blur-3xl pointer-events-none group-hover:bg-[#2DD4BF]/15 transition-all" />
@@ -146,7 +177,7 @@ export default function MainDashboard({
                   <span className="w-1.5 h-1.5 rounded-full bg-[#2DD4BF]" />
                   Módulo de Escalas
                 </span>
-                <span className="text-xs font-mono text-[#8A898D] bg-[#1B1B1E] px-2.5 py-1 rounded-md border border-[#2A2A2E]">
+                <span className="text-xs font-mono text-zinc-300 bg-[#1B1B1E] px-2.5 py-1 rounded-md border border-[#2A2A2E]">
                   Do Mayor (C)
                 </span>
               </div>
@@ -155,17 +186,17 @@ export default function MainDashboard({
                 Estudio de las siete posiciones de la escala mayor
               </h3>
 
-              <p className="text-sm sm:text-base text-[#A09FA3] leading-relaxed mb-6">
+              <p className="text-sm sm:text-base text-slate-300 leading-relaxed mb-6">
                 Explora las siete posiciones de la escala mayor de Do mediante el sistema de tres notas por cuerda. Visualiza notas y grados, identifica las fundamentales y comprende la correlación con los modos relativos.
               </p>
 
               {/* Mini gráfico visual representativo (Previsualización esquemática de escala) */}
               <div className="bg-[#0D0D0F] border border-[#242428] rounded-xl p-4 mb-6">
-                <div className="text-[11px] font-mono text-[#8A898D] uppercase tracking-wider mb-2 flex items-center justify-between">
+                <div className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider mb-2 flex items-center justify-between">
                   <span>Patrón Diatónico Continuo</span>
                   <span className="text-[#2DD4BF]">3 notas / cuerda</span>
                 </div>
-                
+
                 {/* Visualización abstracta de las 6 cuerdas con 3 notas cada una */}
                 <div className="space-y-1.5 py-1">
                   {[
@@ -177,7 +208,7 @@ export default function MainDashboard({
                     { string: '6ª E', notes: ['F', 'G', 'A'], roots: [] },
                   ].map((row, idx) => (
                     <div key={idx} className="flex items-center gap-3">
-                      <span className="w-8 text-[10px] font-mono text-[#68676B]">{row.string}</span>
+                      <span className="w-8 text-[10px] font-mono text-zinc-400">{row.string}</span>
                       <div className="flex-1 h-[1px] bg-[#222226] relative flex items-center justify-around px-2">
                         {row.notes.map((note, nIdx) => {
                           const isRoot = row.roots.includes(note);
@@ -201,7 +232,7 @@ export default function MainDashboard({
               </div>
 
               {/* Lista de características clave */}
-              <div className="grid grid-cols-2 gap-2 text-xs font-mono text-[#A09FA3] mb-6">
+              <div className="grid grid-cols-2 gap-2 text-xs font-mono text-zinc-300 mb-6">
                 <div className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#2DD4BF]" />
                   <span>Selector de 7 posiciones</span>
@@ -223,15 +254,17 @@ export default function MainDashboard({
 
             {/* Botón de acción */}
             <div className="relative z-10 pt-4 border-t border-[#202024] flex items-center justify-between">
-              <span className="text-xs font-medium text-[#8A898D] group-hover:text-[#F1F0EC] transition-colors">
+              <span className="text-xs font-medium text-zinc-400 group-hover:text-[#F1F0EC] transition-colors">
                 Abrir módulo de escalas
               </span>
               <button
+                type="button"
                 tabIndex={-1}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#2DD4BF]/10 hover:bg-[#2DD4BF] text-[#2DD4BF] hover:text-[#0A0A0B] border border-[#2DD4BF]/30 hover:border-[#2DD4BF] font-semibold text-xs transition-all shadow-md group-hover:translate-x-1"
+                aria-hidden="true"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 h-10 rounded-xl bg-[#2DD4BF] hover:bg-[#38e7d2] active:bg-[#22b5a2] text-[#0A0A0B] font-bold text-xs tracking-wide transition-all duration-200 shadow-md shadow-[#2DD4BF]/20 group-hover:shadow-lg group-hover:shadow-[#2DD4BF]/25 group-hover:translate-x-0.5 group-active:scale-[0.98] motion-reduce:transition-none motion-reduce:transform-none select-none pointer-events-none"
               >
                 <span>Entrar</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4 stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1 motion-reduce:transform-none" />
               </button>
             </div>
           </div>
@@ -240,8 +273,17 @@ export default function MainDashboard({
           {/* TARJETA 2: ARPEGIOS TRÍADA                           */}
           {/* ==================================================== */}
           <div
+            role="button"
+            tabIndex={0}
             onClick={onSelectTriads}
-            className="group relative bg-[#141416] hover:bg-[#18181C] border border-[#26262B] hover:border-[#C6A15B]/60 rounded-2xl p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 shadow-xl hover:shadow-[#C6A15B]/10 cursor-pointer overflow-hidden"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onSelectTriads();
+              }
+            }}
+            aria-label="Abrir módulo de estudio de arpegios tríada"
+            className="group relative bg-[#141416] hover:bg-[#18181C] border border-[#26262B] hover:border-[#C6A15B]/60 rounded-2xl p-6 sm:p-8 flex flex-col justify-between transition-all duration-200 shadow-xl hover:shadow-[#C6A15B]/10 cursor-pointer overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0B] focus-visible:ring-[#C6A15B] motion-reduce:transition-none"
           >
             {/* Resplandor superior dorado */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#C6A15B]/10 rounded-full blur-3xl pointer-events-none group-hover:bg-[#C6A15B]/15 transition-all" />
@@ -253,7 +295,7 @@ export default function MainDashboard({
                   <Sparkles className="w-3.5 h-3.5 fill-current" />
                   Módulo de Arpegios
                 </span>
-                <span className="text-xs font-mono text-[#8A898D] bg-[#1B1B1E] px-2.5 py-1 rounded-md border border-[#2A2A2E]">
+                <span className="text-xs font-mono text-zinc-300 bg-[#1B1B1E] px-2.5 py-1 rounded-md border border-[#2A2A2E]">
                   Tríadas Diatónicas
                 </span>
               </div>
@@ -262,17 +304,17 @@ export default function MainDashboard({
                 Estudio de arpegios tríada
               </h3>
 
-              <p className="text-sm sm:text-base text-[#A09FA3] leading-relaxed mb-6">
+              <p className="text-sm sm:text-base text-slate-300 leading-relaxed mb-6">
                 Estudia las tríadas diatónicas y sus diferentes disposiciones en las siete posiciones del mástil. Incluye pentagrama sincronizado en clave de Sol (8vb), secuenciador a tempo y el completo creador de progresiones armónicas.
               </p>
 
               {/* Mini gráfico visual representativo (Previsualización esquemática de tríadas) */}
               <div className="bg-[#0D0D0F] border border-[#242428] rounded-xl p-4 mb-6">
-                <div className="text-[11px] font-mono text-[#8A898D] uppercase tracking-wider mb-2 flex items-center justify-between">
+                <div className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider mb-2 flex items-center justify-between">
                   <span>Tríadas en 3NPS</span>
                   <span className="text-[#C6A15B]">C • Dm • Em • F • G • Am • Bdim</span>
                 </div>
-                
+
                 {/* Visualización de las 7 tríadas con sus roles */}
                 <div className="flex flex-wrap gap-2 py-1">
                   {[
@@ -294,7 +336,7 @@ export default function MainDashboard({
                   ))}
                 </div>
 
-                <div className="mt-3 pt-2.5 border-t border-[#1C1C20] flex items-center justify-between text-[11px] text-[#A09FA3]">
+                <div className="mt-3 pt-2.5 border-t border-[#1C1C20] flex items-center justify-between text-[11px] text-zinc-300">
                   <span className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-[#C6A15B]" /> Fundamental (1)
                   </span>
@@ -308,7 +350,7 @@ export default function MainDashboard({
               </div>
 
               {/* Lista de características clave */}
-              <div className="grid grid-cols-2 gap-2 text-xs font-mono text-[#A09FA3] mb-6">
+              <div className="grid grid-cols-2 gap-2 text-xs font-mono text-zinc-300 mb-6">
                 <div className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#C6A15B]" />
                   <span>Diapasón interactivo</span>
@@ -330,15 +372,17 @@ export default function MainDashboard({
 
             {/* Botón de acción */}
             <div className="relative z-10 pt-4 border-t border-[#202024] flex items-center justify-between">
-              <span className="text-xs font-medium text-[#8A898D] group-hover:text-[#F1F0EC] transition-colors">
-                Abrir módulo de arpegios existente
+              <span className="text-xs font-medium text-zinc-400 group-hover:text-[#F1F0EC] transition-colors">
+                Abrir módulo de arpegios
               </span>
               <button
+                type="button"
                 tabIndex={-1}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#C6A15B] hover:bg-[#D4B06A] text-[#0A0A0B] font-bold text-xs transition-all shadow-md shadow-[#C6A15B]/20 group-hover:translate-x-1"
+                aria-hidden="true"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 h-10 rounded-xl bg-[#C6A15B] hover:bg-[#d6b26c] active:bg-[#b08d48] text-[#0A0A0B] font-bold text-xs tracking-wide transition-all duration-200 shadow-md shadow-[#C6A15B]/20 group-hover:shadow-lg group-hover:shadow-[#C6A15B]/25 group-hover:translate-x-0.5 group-active:scale-[0.98] motion-reduce:transition-none motion-reduce:transform-none select-none pointer-events-none"
               >
                 <span>Entrar</span>
-                <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+                <ArrowRight className="w-4 h-4 stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1 motion-reduce:transform-none" />
               </button>
             </div>
           </div>
@@ -352,14 +396,14 @@ export default function MainDashboard({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
             <div>
               <h3 className="text-lg sm:text-xl font-bold text-[#F1F0EC] flex items-center gap-2">
-                <Compass className="w-5 h-5 text-[#8A898D]" />
+                <Compass className="w-5 h-5 text-zinc-400" />
                 <span>Espacio para Futuras Herramientas</span>
               </h3>
-              <p className="text-xs text-[#8A898D] mt-0.5">
+              <p className="text-xs text-zinc-400 mt-0.5">
                 Módulos pedagógicos en desarrollo para expandir el sistema de estudio armónico y técnico.
               </p>
             </div>
-            <span className="text-xs font-mono text-[#8A898D] self-start sm:self-auto">
+            <span className="text-xs font-mono text-zinc-400 self-start sm:self-auto">
               Hoja de Ruta Educativa
             </span>
           </div>
@@ -373,11 +417,11 @@ export default function MainDashboard({
                   className="relative bg-[#111113] border border-[#202024] rounded-xl p-5 opacity-70 hover:opacity-90 transition-opacity cursor-not-allowed select-none"
                 >
                   <div className="flex items-start justify-between gap-3 mb-3">
-                    <div className="p-2 rounded-lg bg-[#18181B] border border-[#26262B] text-[#A09FA3]">
+                    <div className="p-2 rounded-lg bg-[#18181B] border border-[#26262B] text-zinc-300">
                       <IconComp className="w-4 h-4" />
                     </div>
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium bg-[#1F1F24] border border-[#2D2D33] text-[#A09FA3]">
-                      <Lock className="w-3 h-3 text-[#68676B]" /> Próximamente
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium bg-[#1F1F24] border border-[#2D2D33] text-zinc-300">
+                      <Lock className="w-3 h-3 text-zinc-400" /> Próximamente
                     </span>
                   </div>
 
@@ -385,11 +429,11 @@ export default function MainDashboard({
                     {module.tag}
                   </div>
 
-                  <h4 className="text-base font-bold text-[#D4D4D8] mb-1.5">
+                  <h4 className="text-base font-bold text-[#F1F0EC] mb-1.5">
                     {module.title}
                   </h4>
 
-                  <p className="text-xs text-[#71717A] leading-relaxed">
+                  <p className="text-xs text-zinc-400 leading-relaxed">
                     {module.description}
                   </p>
                 </div>

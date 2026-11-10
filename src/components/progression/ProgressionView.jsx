@@ -40,10 +40,16 @@ import { DIATONIC_TRIADS } from '../../data/chordsData';
  */
 export default function ProgressionView({
   onBackToDashboard,
-  onGoToStudyMode
+  onGoToStudyMode,
+  isActive = true
 }) {
-  // 1. Motor de audio de guitarra (Web Audio API)
-  const { playNote, stopAllNotes } = useGuitarAudio();
+  // 1. Motor de audio de guitarra con control de volumen independiente (por defecto 80%)
+  const {
+    playNote,
+    stopAllNotes,
+    volume,
+    setVolume
+  } = useGuitarAudio(0.8);
 
   // 2. Estado de Progresiones Guardadas en LocalStorage
   const [savedProgressions, setSavedProgressions] = useState(() => loadSavedProgressions());
@@ -116,6 +122,14 @@ export default function ProgressionView({
     defaultLoop: true,
     onStopAudio: stopAllNotes
   });
+
+  // Detener inmediatamente reproducción y audio al salir de la vista o cambiar de módulo
+  useEffect(() => {
+    if (!isActive) {
+      stop();
+      stopAllNotes();
+    }
+  }, [isActive, stop, stopAllNotes]);
 
   // Reiniciar feedback de entrenamiento auditivo al cambiar de acorde
   useEffect(() => {
@@ -533,6 +547,8 @@ export default function ProgressionView({
           activeNote={activeEvent}
           globalPointer={globalPointer}
           totalEvents={totalEvents}
+          volume={volume}
+          onVolumeChange={setVolume}
           labelMode={practiceMode === 'memory' ? 'none' : practiceMode === 'ear' && !revealedInEarMode ? 'none' : labelMode}
           showPassingNotes={showPassingNotes}
           onTogglePlay={togglePlay}

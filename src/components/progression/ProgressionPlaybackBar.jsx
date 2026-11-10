@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   Play,
   Pause,
@@ -7,6 +7,8 @@ import {
   SkipForward,
   Repeat,
   Volume2,
+  Volume1,
+  VolumeX,
   Sliders,
   Eye,
   Hash
@@ -33,6 +35,8 @@ export default function ProgressionPlaybackBar({
   totalEvents = 0,
   labelMode = 'note',
   showPassingNotes = true,
+  volume = 0.8,
+  onVolumeChange = () => {},
   onTogglePlay,
   onStop,
   onPrevStep,
@@ -47,6 +51,16 @@ export default function ProgressionPlaybackBar({
 }) {
   const currentStepNum = currentStepIndex + 1;
   const progressPercent = totalEvents > 0 ? ((globalPointer + 1) / totalEvents) * 100 : 0;
+
+  const lastVolumeRef = useRef(volume > 0 ? volume : 0.8);
+  const handleToggleMute = () => {
+    if (volume > 0) {
+      lastVolumeRef.current = volume;
+      onVolumeChange(0);
+    } else {
+      onVolumeChange(lastVolumeRef.current || 0.8);
+    }
+  };
 
   return (
     <div className="bg-[#151516] border border-[#2A2A2E] rounded-xl p-4 sm:p-5 shadow-lg space-y-4">
@@ -177,6 +191,42 @@ export default function ProgressionPlaybackBar({
             />
             <span className="text-xs font-mono font-bold text-[#F1F0EC] min-w-[28px] text-right">
               {bpm}
+            </span>
+          </div>
+
+          {/* Control de Volumen de Guitarra */}
+          <div className="flex items-center gap-2 bg-[#0E0E10] border border-[#242428] rounded-lg px-2.5 sm:px-3 py-1.5">
+            <button
+              type="button"
+              onClick={handleToggleMute}
+              className={`p-1 rounded transition-colors cursor-pointer ${
+                volume === 0
+                  ? 'text-red-400 hover:text-red-300'
+                  : 'text-[#C6A15B] hover:text-[#E2C382]'
+              }`}
+              title={volume === 0 ? 'Activar sonido de guitarra' : 'Silenciar guitarra'}
+            >
+              {volume === 0 ? (
+                <VolumeX className="w-3.5 h-3.5" />
+              ) : volume < 0.5 ? (
+                <Volume1 className="w-3.5 h-3.5" />
+              ) : (
+                <Volume2 className="w-3.5 h-3.5" />
+              )}
+            </button>
+            <span className="text-[11px] font-mono text-[#A09FA3] hidden sm:inline">Vol:</span>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.05"
+              value={volume}
+              onChange={(e) => onVolumeChange(Number(e.target.value))}
+              className="w-16 sm:w-20 accent-[#C6A15B] cursor-pointer"
+              title={`Volumen: ${Math.round(volume * 100)}%`}
+            />
+            <span className="text-xs font-mono font-bold text-[#F1F0EC] min-w-[28px] text-right">
+              {Math.round(volume * 100)}%
             </span>
           </div>
 

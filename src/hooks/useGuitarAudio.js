@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useCallback, useEffect, useState } from 'react';
 import { getFrequency } from '../utils/musicTheory';
 
 /**
@@ -9,12 +9,23 @@ import { getFrequency } from '../utils/musicTheory';
  * - 2 osciladores: Triangle (cuerpo fundamental) + Sawtooth (armónicos metálicos)
  * - Filtro Biquad lowpass dinámico: corte inicial en f * 3.5 cayendo exponencialmente a f * 0.8
  * - Ganancia con envolvente ADSR de cuerda pulsada
+ * - Control de volumen master ajustable (0 a 100%)
  * - Manejo de polifonía (máximo 4 voces simultáneas) para evitar solapamiento / cacofonía
  * - Desconexión de nodos al finalizar (onended) para evitar fugas de memoria en Web Audio
  */
-export function useGuitarAudio() {
+export function useGuitarAudio(initialVolume = 0.8) {
   const audioContextRef = useRef(null);
   const activeNodesRef = useRef([]);
+
+  // Estado y referencia mutable de volumen (0 a 1)
+  const [volume, setVolumeState] = useState(initialVolume);
+  const volumeRef = useRef(initialVolume);
+
+  const setVolume = useCallback((newVol) => {
+    const clamped = Math.max(0, Math.min(1, newVol));
+    setVolumeState(clamped);
+    volumeRef.current = clamped;
+  }, []);
 
   // Inicializar o reanudar AudioContext tras interacción
   const getAudioContext = useCallback(() => {
@@ -31,7 +42,7 @@ export function useGuitarAudio() {
   }, []);
 
   /**
-   * Reproduce una nota dado su número MIDI con duración adaptativa.
+   * Reproduce una nota dado su número MIDI con duración y volumen adaptativos.
    * Admite planificación temporal mediante el reloj de Web Audio API (startTime).
    * @param {number} midi - Número MIDI de la nota (ej. 48 para C3, 60 para C4)
    * @param {number} duration - Duración estimada en segundos (default 1.2s)
@@ -39,6 +50,9 @@ export function useGuitarAudio() {
    */
   const playNote = useCallback((midi, duration = 1.2, startTime = null) => {
     try {
+      // Si el volumen es 0, omitir síntesis
+      if (volumeRef.current <= 0.001) return;
+
       const ctx = getAudioContext();
       if (!ctx) return;
 
@@ -47,8 +61,7 @@ export function useGuitarAudio() {
         : ctx.currentTime;
       const freq = getFrequency(midi);
 
-      // Gestión de polifonía: si hay más de 3 notas activas sonando,
-      // atenuar suavemente la más antigua en 20ms para evitar saturación y solapamiento
+      // Gestión de polifonía: atenuar la más antigua si se supera el límite de 4 voces
       if (activeNodesRef.current.length >= 4) {
         const oldest = activeNodesRef.current.shift();
         if (oldest) {
@@ -95,13 +108,14 @@ export function useGuitarAudio() {
       gainTri.connect(filter);
       gainSaw.connect(filter);
 
-      // Envolvente de Ganancia Master (ADSR cuerda pulsada)
+      // Envolvente de Ganancia Master escalada con el volumen configurado
       const masterGain = ctx.createGain();
       masterGain.gain.setValueAtTime(0.0001, now);
-      // Ataque lineal suave en 12 ms
+
+      const peakGain = Math.max(0.0001, 0.35 * volumeRef.current);
       const attackTime = Math.min(0.015, duration * 0.05);
-      masterGain.gain.linearRampToValueAtTime(0.35, now + attackTime);
-      // Decaimiento exponencial a 0.0001
+
+      masterGain.gain.linearRampToValueAtTime(peakGain, now + attackTime);
       masterGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
       filter.connect(masterGain);
@@ -133,7 +147,6 @@ export function useGuitarAudio() {
       const nodeTracker = { oscTriangle, oscSaw, masterGain, stopTime, cleanup };
       activeNodesRef.current.push(nodeTracker);
 
-      // Limpiar del registro de nodos activos cuando termine
       setTimeout(() => {
         activeNodesRef.current = activeNodesRef.current.filter((n) => n !== nodeTracker);
       }, duration * 1000 + 100);
@@ -178,9 +191,10 @@ export function useGuitarAudio() {
   return {
     playNote,
     stopAllNotes,
-    resumeAudio: getAudioContext
+    resumeAudio: getAudioContext,
+    volume,
+    setVolume
   };
 }
 
 export default useGuitarAudio;
-

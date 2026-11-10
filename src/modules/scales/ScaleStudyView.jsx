@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   ArrowLeft,
   Sparkles,
@@ -11,20 +11,28 @@ import {
   BookOpen
 } from 'lucide-react';
 import { SCALE_POSITIONS_DATA } from './data/scalePositionsData';
+import { getRhythmFigureById, DEFAULT_RHYTHM_ID } from './data/rhythmFiguresData';
 import ScalePositionSelector from './components/ScalePositionSelector';
+import RhythmSelector from './components/RhythmSelector';
 import ScaleFretboard from './components/ScaleFretboard';
 import ScaleTheoryCard from './components/ScaleTheoryCard';
 import ScalePlaybackBar from './components/ScalePlaybackBar';
 import useGuitarAudio from '../../hooks/useGuitarAudio';
+import useScaleRhythmSequencer from './hooks/useScaleRhythmSequencer';
 
 /**
  * ScaleStudyView.jsx - Vista Principal del Módulo de Escala Mayor 3NPS.
  * 
- * Permite a los estudiantes explorar las 7 posiciones diatónicas de Do Mayor,
- * alternar modos de visualización (notas, grados, dedos), reproducir la escala
- * a tempo con audio Web Audio API y comprender la relación con los modos griegos relativos.
+ * Permite a los estudiantes:
+ * - Seleccionar cualquiera de las 7 posiciones 3NPS de Do Mayor.
+ * - Elegir figuras rítmicas de práctica con las imágenes oficiales en assets.
+ * - Sincronizar la práctica a tempo (BPM) con metrónomo y controles de volumen independientes.
+ * - Detener inmediatamente cualquier reproducción o sonido al salir del módulo o cambiar de página.
+ * - Visualizar notas, grados arábigos, grados romanos o digitación en el diapasón.
+ * - Comprender los modos griegos relativos y su independencia del centro tonal.
  */
 export default function ScaleStudyView({
+  isActive = true,
   initialPositionId = 1,
   onBackToCenter = () => {},
   onPositionChange = () => {}
@@ -32,17 +40,22 @@ export default function ScaleStudyView({
   // Posición activa (1 a 7)
   const [selectedPositionId, setSelectedPositionId] = useState(initialPositionId);
 
+  // Figura rítmica activa ('quarter' | 'eighth' | 'shuffle' | 'triplet' | 'sixteenth')
+  const [selectedRhythmId, setSelectedRhythmId] = useState(DEFAULT_RHYTHM_ID);
+
   // Modo de etiqueta en el diapasón: 'note' | 'degree' | 'roman' | 'finger'
   const [labelMode, setLabelMode] = useState('note');
 
-  // Filtro de solo tónicas
+  // Filtro de solo tónicas Do
   const [highlightRootsOnly, setHighlightRootsOnly] = useState(false);
 
-  // Nota activa en el mástil (por clic o por reproducción de escala)
-  const [activeNoteId, setActiveNoteId] = useState(null);
-
-  // Motor de Audio de Guitarra
-  const { playNote, stopAllNotes } = useGuitarAudio();
+  // Motor de Audio de Guitarra con control de volumen independiente (por defecto 80%)
+  const {
+    playNote,
+    stopAllNotes,
+    volume: guitarVolume,
+    setVolume: setGuitarVolume
+  } = useGuitarAudio(0.8);
 
   // Posición actual seleccionada
   const currentPosition = useMemo(() => {
@@ -52,24 +65,81 @@ export default function ScaleStudyView({
     );
   }, [selectedPositionId]);
 
-  // Manejar cambio de posición
+  // Figura rítmica actual seleccionada
+  const currentRhythmFigure = useMemo(() => {
+    return getRhythmFigureById(selectedRhythmId);
+  }, [selectedRhythmId]);
+
+  // Motor de Secuenciador Rítmico Desacoplado con control de volumen de metrónomo (por defecto 70%)
+  const {
+    isPlaying,
+    bpm,
+    direction,
+    activeNoteId,
+    isBeatPulse,
+    metronomeEnabled,
+    metronomeVolume,
+    setBpm,
+    setDirection,
+    setMetronomeEnabled,
+    setMetronomeVolume,
+    togglePlay,
+    stop,
+    triggerManualNote,
+    setActiveNoteId
+  } = useScaleRhythmSequencer({
+    notes: currentPosition.notas,
+    rhythmFigureId: selectedRhythmId,
+    playNote,
+    stopAllNotes,
+    initialBpm: 80,
+    initialDirection: 'ASC',
+    initialMetronomeVolume: 0.7
+  });
+
+  // Detener la reproducción y cortar todo el audio si el usuario sale de este módulo
+  useEffect(() => {
+    if (!isActive) {
+      stop();
+      stopAllNotes();
+    }
+  }, [isActive, stop, stopAllNotes]);
+
+  // Manejar cambio de posición manteniendo la figura rítmica seleccionada
   const handleSelectPosition = (id) => {
+    stop();
     stopAllNotes();
-    setActiveNoteId(null);
     setSelectedPositionId(id);
     onPositionChange(id);
   };
 
-  // Manejar clic en una nota del mástil
+  // Manejar cambio de figura rítmica sin reiniciar la posición
+  const handleSelectRhythm = (rhythmId) => {
+    setSelectedRhythmId(rhythmId);
+  };
+
+  // Manejar clic en una nota individual del mástil
   const handleNoteClick = (note) => {
-    setActiveNoteId(note.id);
-    // Reproducir nota individual con duración de 0.8s
-    playNote(note.midi, 0.8);
-    // Limpiar resalte después de 600ms si no hay reproducción activa
+    triggerManualNote(note);
     setTimeout(() => {
-      setActiveNoteId((curr) => (curr === note.id ? null : curr));
+      if (!isPlaying) {
+        setActiveNoteId(null);
+      }
     }, 600);
   };
+
+  // Botón volver al Centro de Estudio: detiene el audio y navega
+  const handleBackToCenter = () => {
+    stop();
+    stopAllNotes();
+    onBackToCenter();
+  };
+
+  // Nota actualmente activa en reproducción
+  const currentPlayingNote = useMemo(() => {
+    if (!activeNoteId) return null;
+    return currentPosition.notas.find((n) => n.id === activeNoteId) || null;
+  }, [activeNoteId, currentPosition]);
 
   return (
     <div className="min-h-screen bg-[#0A0A0B] text-[#F1F0EC] pb-24">
@@ -81,7 +151,7 @@ export default function ScaleStudyView({
           {/* Botón de retorno y badges superiores */}
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
             <button
-              onClick={onBackToCenter}
+              onClick={handleBackToCenter}
               className="inline-flex items-center gap-2 text-xs font-mono text-[#A09FA3] hover:text-[#F1F0EC] transition-colors cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -102,7 +172,7 @@ export default function ScaleStudyView({
           {/* Título de la posición activa */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2.5 mb-2">
+              <div className="flex flex-wrap items-center gap-2.5 mb-2">
                 <span className="text-xs font-mono text-[#2DD4BF] bg-[#2DD4BF]/10 px-2.5 py-0.5 rounded-full border border-[#2DD4BF]/30 font-bold">
                   Posición {currentPosition.numero} de 7
                 </span>
@@ -144,17 +214,40 @@ export default function ScaleStudyView({
       {/* ======================================================== */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         
-        {/* Selector de las 7 Posiciones */}
+        {/* 1. Selector de las 7 Posiciones */}
         <ScalePositionSelector
           selectedPositionId={selectedPositionId}
           onSelectPosition={handleSelectPosition}
         />
 
-        {/* ====================================================== */}
-        {/* BARRA DE HERRAMIENTAS DE VISUALIZACIÓN EN DIAPASÓN      */}
-        {/* ====================================================== */}
+        {/* 2. Selector de Figuras Rítmicas con imágenes en assets */}
+        <RhythmSelector
+          selectedRhythmId={selectedRhythmId}
+          onSelectRhythm={handleSelectRhythm}
+        />
+
+        {/* 3. Barra de Práctica a Tempo, Metrónomo y Controles de Volumen Independientes */}
+        <ScalePlaybackBar
+          isPlaying={isPlaying}
+          bpm={bpm}
+          direction={direction}
+          rhythmFigure={currentRhythmFigure}
+          isBeatPulse={isBeatPulse}
+          metronomeEnabled={metronomeEnabled}
+          guitarVolume={guitarVolume}
+          metronomeVolume={metronomeVolume}
+          currentPlayingNote={currentPlayingNote}
+          onTogglePlay={togglePlay}
+          onStop={stop}
+          onChangeBpm={setBpm}
+          onChangeDirection={setDirection}
+          onToggleMetronome={() => setMetronomeEnabled((prev) => !prev)}
+          onChangeGuitarVolume={setGuitarVolume}
+          onChangeMetronomeVolume={setMetronomeVolume}
+        />
+
+        {/* 4. Barra de Herramientas de Visualización en Diapasón */}
         <div className="bg-[#121214] border border-[#222226] rounded-xl p-3 sm:p-4 mb-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
-          
           {/* Selector de modo de etiqueta */}
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-mono text-[#8A898D] flex items-center gap-1.5 mr-1">
@@ -223,12 +316,9 @@ export default function ScaleStudyView({
               <span>Resaltar solo Tónicas Do</span>
             </button>
           </div>
-
         </div>
 
-        {/* ====================================================== */}
-        {/* DIAPASÓN INTERACTIVO SVG                               */}
-        {/* ====================================================== */}
+        {/* 5. Diapasón Interactivo SVG */}
         <div className="mb-4">
           <ScaleFretboard
             position={currentPosition}
@@ -239,24 +329,10 @@ export default function ScaleStudyView({
           />
         </div>
 
-        {/* ====================================================== */}
-        {/* BARRA DE SECUENCIADOR Y TEMPO (AUDIO REAL)             */}
-        {/* ====================================================== */}
-        <ScalePlaybackBar
-          notes={currentPosition.notas}
-          playNote={playNote}
-          stopAllNotes={stopAllNotes}
-          activeNoteId={activeNoteId}
-          onActiveNoteChange={setActiveNoteId}
-        />
-
-        {/* ====================================================== */}
-        {/* PANEL PEDAGÓGICO Y MODOS GRIEGOS RELATIVOS             */}
-        {/* ====================================================== */}
+        {/* 6. Panel Pedagógico y Modos Griegos Relativos */}
         <ScaleTheoryCard position={currentPosition} />
 
       </main>
     </div>
   );
 }
-

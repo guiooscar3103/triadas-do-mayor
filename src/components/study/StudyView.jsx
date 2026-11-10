@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { C_MAJOR_POSITIONS } from '../../data/cMajorPositions';
 import { DIATONIC_TRIADS } from '../../data/chordsData';
 import useGuitarAudio from '../../hooks/useGuitarAudio';
@@ -20,7 +20,8 @@ export default function StudyView({
   positionId = 1,
   onBackToDashboard,
   onChangePosition,
-  onGoToProgressions
+  onGoToProgressions,
+  isActive = true
 }) {
   // Posición activa actual
   const currentPosition = useMemo(() => {
@@ -39,8 +40,13 @@ export default function StudyView({
   const [showPassingNotes, setShowPassingNotes] = useState(true);
   const [showTheoryInfo, setShowTheoryInfo] = useState(false);
 
-  // Motor de Audio de Guitarra
-  const { playNote, stopAllNotes } = useGuitarAudio();
+  // Motor de Audio de Guitarra con control de volumen independiente (por defecto 80%)
+  const {
+    playNote,
+    stopAllNotes,
+    volume,
+    setVolume
+  } = useGuitarAudio(0.8);
 
   // Filtrar notas a reproducir en el secuenciador:
   // Si hay tríada activa: arpegio de la tríada
@@ -78,6 +84,13 @@ export default function StudyView({
     stop();
     stopAllNotes();
   };
+
+  // Detener inmediatamente reproducción y notas de audio al salir de la vista o cambiar de módulo
+  useEffect(() => {
+    if (!isActive) {
+      handleStop();
+    }
+  }, [isActive]);
 
   const handleSelectTriad = (triadId) => {
     stopAllNotes();
@@ -321,6 +334,8 @@ export default function StudyView({
           onStop={handleStop}
           onBpmChange={setBpm}
           onDirectionChange={setDirection}
+          volume={volume}
+          onVolumeChange={setVolume}
           labelMode={labelMode}
           onToggleLabelMode={() => setLabelMode(labelMode === 'note' ? 'interval' : 'note')}
           showPassingNotes={showPassingNotes}

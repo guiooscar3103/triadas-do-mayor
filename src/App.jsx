@@ -9,7 +9,8 @@ import TriadsModule from './modules/triads/TriadsModule';
  * 
  * Gestiona el acceso al Centro de Estudio (Guitar Study) y a los dos módulos
  * independientes (Escala Mayor 3NPS y Arpegios Tríada), preservando íntegramente
- * los estados de estudio de cada módulo al alternar entre ellos o regresar al Dashboard.
+ * los estados de estudio pero deteniendo automáticamente cualquier reproducción
+ * o sonido activo al cambiar de página o volver al Dashboard.
  */
 export default function App() {
   // Módulo activo principal: 'DASHBOARD' | 'SCALES' | 'TRIADS'
@@ -79,6 +80,7 @@ export default function App() {
       {/* 3. Módulo 1: Escala Mayor 3NPS (Nuevo módulo) */}
       <div className={activeModule === 'SCALES' ? 'block' : 'hidden'}>
         <ScaleStudyView
+          isActive={activeModule === 'SCALES'}
           initialPositionId={scalePositionId}
           onBackToCenter={handleNavigateToDashboard}
           onPositionChange={handleScalePositionChange}
@@ -88,6 +90,7 @@ export default function App() {
       {/* 4. Módulo 2: Arpegios Tríada (Módulo existente preservado) */}
       <div className={activeModule === 'TRIADS' ? 'block' : 'hidden'}>
         <TriadsModule
+          isActive={activeModule === 'TRIADS'}
           onStateChange={handleTriadStateChange}
           onBackToMainDashboard={handleNavigateToDashboard}
         />

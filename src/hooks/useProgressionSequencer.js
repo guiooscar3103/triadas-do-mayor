@@ -258,6 +258,9 @@ export function useProgressionSequencer({
   useEffect(() => {
     return () => {
       clearActiveTimer();
+      if (typeof onStopAudioRef.current === 'function') {
+        onStopAudioRef.current();
+      }
     };
   }, [clearActiveTimer]);
 

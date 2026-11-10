@@ -201,6 +201,9 @@ export function useSequencer({
   useEffect(() => {
     return () => {
       stopTimer();
+      if (typeof onStopAudioRef.current === 'function') {
+        onStopAudioRef.current();
+      }
     };
   }, [stopTimer]);
 
