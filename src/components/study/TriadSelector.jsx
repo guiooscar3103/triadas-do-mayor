@@ -7,14 +7,28 @@ export default function TriadSelector({ activeTriadId, onSelectTriad }) {
     <div className="bg-[#151516] border border-[#242428] rounded-xl p-3 sm:p-4">
       <div className="flex items-center justify-between gap-2 mb-2.5">
         <div className="flex items-center gap-1.5 text-xs text-[#A09FA3]">
-          <Layers className="w-3.5 h-3.5 text-[#C6A15B]" />
+          <Layers className="w-3.5 h-3.5 text-[#E5B869]" />
           <span className="font-semibold text-[#F1F0EC] tracking-wide uppercase text-[11px]">
             Seleccionar Tríada Diatónica
           </span>
         </div>
-        <span className="text-[10px] font-mono text-[#68676B] hidden sm:inline-block">
-          7 Grados Armónicos (C Mayor)
-        </span>
+        
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => onSelectTriad('GENERAL')}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all cursor-pointer ${
+              activeTriadId === 'GENERAL'
+                ? 'bg-[#F4F4F6] text-[#0A0A0B] border border-white font-bold shadow-sm'
+                : 'bg-[#18181A] hover:bg-[#202022] text-[#D4D4D8] border border-[#2A2A2E]'
+            }`}
+            title="Vista General: Visualiza las notas de la escala en blanco y negro (estilo teclas de piano)"
+          >
+            <span>🎹 Vista General (Escala)</span>
+          </button>
+          <span className="text-[10px] font-mono text-[#71717A] hidden md:inline-block">
+            7 Grados (C Mayor)
+          </span>
+        </div>
       </div>
 
       {/* Botonera de los 7 grados diatónicos */}
@@ -27,7 +41,7 @@ export default function TriadSelector({ activeTriadId, onSelectTriad }) {
               onClick={() => onSelectTriad(triad.id)}
               className={`group relative flex flex-col items-center justify-center p-2.5 rounded-lg border transition-all duration-150 cursor-pointer text-left ${
                 isSelected
-                  ? 'bg-[#202022] border-[#C6A15B] shadow-sm'
+                  ? 'bg-[#202022] border-[#E5B869] shadow-sm'
                   : 'bg-[#18181A] border-[#26262A] hover:border-[#38383E] hover:bg-[#1C1C1E]'
               }`}
             >

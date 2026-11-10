@@ -16,18 +16,46 @@ export default function StepSequence({
   const getRole = (nota) => {
     const role = getHarmonicRole(nota, triad);
     if (!role.isMember) {
-      return { isMember: false, color: 'bg-[#18181A] text-[#71717A] border-[#242428]', label: 'Paso' };
+      if (role.isDiatonic) {
+        return {
+          isMember: false,
+          isDiatonic: true,
+          color: 'bg-[#F4F4F6] text-[#0A0A0B] border-[#D4D4D8] font-bold hover:bg-white shadow-sm',
+          label: 'Escala'
+        };
+      }
+      return {
+        isMember: false,
+        isDiatonic: false,
+        color: 'bg-[#27272A] text-[#CBD5E1] border-[#3F3F46] font-medium',
+        label: 'Cromática'
+      };
     }
     if (role.role === 'root') {
-      return { isMember: true, color: 'bg-[#C6A15B]/15 text-[#C6A15B] border-[#C6A15B]/40 font-semibold', label: '1 (Fund.)' };
+      return {
+        isMember: true,
+        isDiatonic: true,
+        color: 'bg-[#E5B869]/15 text-[#E5B869] border-[#E5B869]/50 font-bold',
+        label: '1 (Fund.)'
+      };
     }
     if (role.role === 'third') {
-      return { isMember: true, color: 'bg-[#2DD4BF]/15 text-[#2DD4BF] border-[#2DD4BF]/40 font-semibold', label: `${role.label} (3ª)` };
+      return {
+        isMember: true,
+        isDiatonic: true,
+        color: 'bg-[#2DD4BF]/15 text-[#2DD4BF] border-[#2DD4BF]/50 font-bold',
+        label: `${role.label} (3ª)`
+      };
     }
     if (role.role === 'fifth') {
-      return { isMember: true, color: 'bg-[#818CF8]/15 text-[#818CF8] border-[#818CF8]/40 font-semibold', label: `${role.label} (5ª)` };
+      return {
+        isMember: true,
+        isDiatonic: true,
+        color: 'bg-[#818CF8]/15 text-[#818CF8] border-[#818CF8]/50 font-bold',
+        label: `${role.label} (5ª)`
+      };
     }
-    return { isMember: true, color: 'bg-[#202022] text-[#F1F0EC] border-[#303034]', label: role.label };
+    return { isMember: true, isDiatonic: true, color: 'bg-[#202022] text-[#F1F0EC] border-[#303034]', label: role.label };
   };
 
   return (
@@ -68,22 +96,26 @@ export default function StepSequence({
                       onClick={() => onNoteClick(note, note.index)}
                       className={`relative flex items-center justify-between px-2.5 py-1.5 rounded-md border text-left transition-all duration-150 cursor-pointer ${
                         isActive
-                          ? 'bg-[#C6A15B] text-[#0A0A0B] border-[#F1F0EC] shadow-md scale-[1.02] z-10 font-bold'
-                          : `${role.color} hover:border-[#4A4A50]`
+                          ? 'bg-[#E5B869] text-[#0A0A0B] border-[#FFFFFF] shadow-md scale-[1.02] z-10 font-bold'
+                          : `${role.color} hover:border-[#64748B]`
                       }`}
                     >
                       <div className="flex items-baseline gap-1.5">
                         <span className="font-bold text-sm tracking-tight">
                           {note.nota}
                         </span>
-                        <span className={`text-[10px] font-mono ${isActive ? 'text-[#0A0A0B]/80' : 'text-[#71717A]'}`}>
+                        <span className={`text-[10px] font-mono ${isActive ? 'text-[#0A0A0B]/80' : role.isMember ? 'text-[#94A3B8]' : 'text-[#52525B]'}`}>
                           {note.octava}
                         </span>
                         {note.esTonicaDo && (
                           <span
                             title="Tónica Do (C)"
                             className={`text-[9px] px-1 rounded font-bold uppercase ${
-                              isActive ? 'bg-[#0A0A0B] text-[#C6A15B]' : 'bg-[#C6A15B]/20 text-[#C6A15B] border border-[#C6A15B]/40'
+                              isActive
+                                ? 'bg-[#0A0A0B] text-[#E5B869]'
+                                : role.isMember
+                                  ? 'bg-[#E5B869]/20 text-[#E5B869] border border-[#E5B869]/50'
+                                  : 'bg-[#E5B869] text-[#0A0A0B] border border-[#E5B869]'
                             }`}
                           >
                             Do
@@ -92,7 +124,7 @@ export default function StepSequence({
                       </div>
 
                       <div className="flex items-center gap-1.5 text-right font-mono">
-                        <span className={`text-[10px] ${isActive ? 'text-[#0A0A0B]/80' : 'text-[#71717A]'}`}>
+                        <span className={`text-[10px] ${isActive ? 'text-[#0A0A0B]/80' : role.isMember ? 'text-[#94A3B8]' : 'text-[#52525B]'}`}>
                           Tr.{note.traste}
                         </span>
                         {isActive && <Volume2 className="w-3 h-3 text-[#0A0A0B] animate-pulse" />}

@@ -27,9 +27,10 @@ export default function StudyView({
     return C_MAJOR_POSITIONS.find((p) => p.id === positionId) || C_MAJOR_POSITIONS[0];
   }, [positionId]);
 
-  // Tríada diatónica activa (por defecto C Major)
+  // Tríada diatónica activa (por defecto C Major, o 'GENERAL' para Vista General)
   const [activeTriadId, setActiveTriadId] = useState('C');
   const activeTriad = useMemo(() => {
+    if (activeTriadId === 'GENERAL') return null;
     return DIATONIC_TRIADS.find((t) => t.id === activeTriadId) || DIATONIC_TRIADS[0];
   }, [activeTriadId]);
 
@@ -41,9 +42,14 @@ export default function StudyView({
   // Motor de Audio de Guitarra
   const { playNote, stopAllNotes } = useGuitarAudio();
 
-  // Filtrar ÚNICAMENTE las notas del arpegio de la tríada activa, ordenadas de grave a agudo por MIDI
+  // Filtrar notas a reproducir en el secuenciador:
+  // Si hay tríada activa: arpegio de la tríada
+  // Si es Vista General: las 18 notas de la posición ascendentes
   const notasArpegio = useMemo(() => {
-    if (!currentPosition || !activeTriad) return [];
+    if (!currentPosition) return [];
+    if (!activeTriad) {
+      return [...currentPosition.notas].sort((a, b) => a.midi - b.midi);
+    }
     return currentPosition.notas
       .filter((n) => activeTriad.notas.includes(n.nota))
       .sort((a, b) => a.midi - b.midi);
@@ -204,21 +210,27 @@ export default function StudyView({
             </p>
           </div>
 
-          {/* Información de la Tríada Seleccionada */}
+          {/* Información del Modo Activo: Tríada o Vista General */}
           <div className="bg-[#0E0E10] border border-[#242428] rounded-xl p-3.5 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-lg bg-[#202022] text-[#C6A15B] border border-[#C6A15B]/30 shadow-sm">
-              {activeTriad.simbolo}
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-lg border shadow-sm ${
+              activeTriad ? 'bg-[#202022] text-[#E5B869] border-[#E5B869]/40' : 'bg-[#F4F4F6] text-[#0A0A0B] border-white'
+            }`}>
+              {activeTriad ? activeTriad.simbolo : '🎹'}
             </div>
             <div>
               <div className="text-xs font-semibold text-[#F1F0EC] flex items-center gap-1.5">
-                <span>{activeTriad.nombre}</span>
-                <span className="text-[#A09FA3] font-mono">({activeTriad.gradoRomano})</span>
+                <span>{activeTriad ? activeTriad.nombre : 'Vista General • Escala de Do Mayor'}</span>
+                {activeTriad && <span className="text-[#A09FA3] font-mono">({activeTriad.gradoRomano})</span>}
               </div>
               <div className="text-[11px] font-mono text-[#A09FA3]">
-                Notas: <span className="text-[#F1F0EC] font-semibold">{activeTriad.notas.join(' - ')}</span>
+                {activeTriad ? (
+                  <>Notas: <span className="text-[#F1F0EC] font-semibold">{activeTriad.notas.join(' - ')}</span></>
+                ) : (
+                  <>18 Notas: <span className="text-[#F1F0EC] font-semibold">C - D - E - F - G - A - B</span> (Estilo Piano)</>
+                )}
               </div>
               <div className="text-[10px] text-[#71717A] font-mono">
-                Fórmula: {activeTriad.formula}
+                {activeTriad ? `Fórmula: ${activeTriad.formula}` : 'Visualización general: blanco y negro'}
               </div>
             </div>
           </div>
@@ -226,11 +238,11 @@ export default function StudyView({
 
         {/* Panel Desplegable de Teoría y Leyenda de Colores */}
         {showTheoryInfo && (
-          <div className="bg-[#151516] border border-[#C6A15B]/40 rounded-xl p-5 shadow-2xl space-y-4">
+          <div className="bg-[#151516] border border-[#E5B869]/40 rounded-xl p-5 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-[#242428] pb-3">
               <h3 className="text-sm font-semibold text-[#F1F0EC] flex items-center gap-2">
-                <Info className="w-4 h-4 text-[#C6A15B]" />
-                <span>Código Semántico de Color Armónico (Identificación de Grados)</span>
+                <Info className="w-4 h-4 text-[#E5B869]" />
+                <span>Jerarquía Semántica: Blanco y Negro + Colores de Arpegio</span>
               </h3>
               <button
                 onClick={() => setShowTheoryInfo(false)}
@@ -240,44 +252,54 @@ export default function StudyView({
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
               <div className="bg-[#0E0E10] p-3 rounded-lg border border-[#202022]">
-                <div className="flex items-center gap-2 font-semibold text-[#C6A15B] mb-1">
-                  <span className="w-3 h-3 rounded-full bg-[#C6A15B]" />
+                <div className="flex items-center gap-2 font-semibold text-[#F4F4F6] mb-1">
+                  <span className="w-3.5 h-3.5 rounded-full bg-[#F4F4F6] border border-[#0A0A0B]" />
+                  <span>Escala (Teclas Piano)</span>
+                </div>
+                <p className="text-[#A09FA3] text-[11px] leading-relaxed">
+                  Blanco cálido con letra negra. Máxima legibilidad y contraste limpio sobre fondo oscuro.
+                </p>
+              </div>
+
+              <div className="bg-[#0E0E10] p-3 rounded-lg border border-[#202022]">
+                <div className="flex items-center gap-2 font-semibold text-[#E5B869] mb-1">
+                  <span className="w-3.5 h-3.5 rounded-full bg-[#E5B869]" />
                   <span>Fundamental (1)</span>
                 </div>
                 <p className="text-[#A09FA3] text-[11px] leading-relaxed">
-                  Dorado sobrio. Base y raíz del acorde tríada en estudio.
+                  Dorado destacado. Tónica y base del arpegio o acorde en estudio.
                 </p>
               </div>
 
               <div className="bg-[#0E0E10] p-3 rounded-lg border border-[#202022]">
                 <div className="flex items-center gap-2 font-semibold text-[#2DD4BF] mb-1">
-                  <span className="w-3 h-3 rounded-full bg-[#2DD4BF]" />
+                  <span className="w-3.5 h-3.5 rounded-full bg-[#2DD4BF]" />
                   <span>Tercera (3 / b3)</span>
                 </div>
                 <p className="text-[#A09FA3] text-[11px] leading-relaxed">
-                  Turquesa suave. Define la cualidad modal (Mayor o Menor).
+                  Turquesa vibrante. Define la cualidad modal (Mayor o Menor).
                 </p>
               </div>
 
               <div className="bg-[#0E0E10] p-3 rounded-lg border border-[#202022]">
                 <div className="flex items-center gap-2 font-semibold text-[#818CF8] mb-1">
-                  <span className="w-3 h-3 rounded-full bg-[#818CF8]" />
+                  <span className="w-3.5 h-3.5 rounded-full bg-[#818CF8]" />
                   <span>Quinta (5 / b5)</span>
                 </div>
                 <p className="text-[#A09FA3] text-[11px] leading-relaxed">
-                  Lavanda / azul grisáceo. Soporte y estabilidad acústica.
+                  Lavanda / índigo luminoso. Soporte y estabilidad armónica.
                 </p>
               </div>
 
               <div className="bg-[#0E0E10] p-3 rounded-lg border border-[#202022]">
-                <div className="flex items-center gap-2 font-semibold text-[#F1F0EC] mb-1">
-                  <span className="w-3 h-3 rounded-full border border-dashed border-[#C6A15B] bg-transparent" />
-                  <span>Centro Tonal Do (C)</span>
+                <div className="flex items-center gap-2 font-semibold text-[#A09FA3] mb-1">
+                  <span className="w-3.5 h-3.5 rounded-full bg-[#27272A] border border-[#52525B]" />
+                  <span>Notas Cromáticas</span>
                 </div>
                 <p className="text-[#A09FA3] text-[11px] leading-relaxed">
-                  Anillo punteado dorado para mantener siempre visible el centro tonal diatónico.
+                  Fondo grafito con letra clara. Menor protagonismo sin desaparecer visualmente.
                 </p>
               </div>
             </div>

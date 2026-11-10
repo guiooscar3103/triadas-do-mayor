@@ -58,47 +58,149 @@ export function getFrequency(midi) {
 
 /**
  * Paleta semántica musical estricta:
- * - Fundamental (1): Dorado sobrio (#C6A15B)
- * - Tercera (3 / b3): Turquesa suave (#2DD4BF)
- * - Quinta (5 / b5): Lavanda / azul grisáceo (#818CF8)
- * - Notas de paso: Gris neutro oscuro (#2A2A2E)
+ * - Notas de la escala (Vista general / teclas de piano):
+ *   Fondo blanco cálido (#F4F4F6), letra negra (#0A0A0B), contraste 19:1.
+ * - Notas cromáticas (fuera de la escala):
+ *   Fondo grafito (#27272A), letra gris clara (#CBD5E1).
+ * - Arpegios y estudio de tríadas:
+ *   Fundamental (1): Dorado destacado (#E5B869)
+ *   Tercera (3 / b3): Turquesa vibrante (#2DD4BF)
+ *   Quinta (5 / b5): Lavanda / índigo luminoso (#818CF8)
+ * - Centro tonal Do (C): Anillo punteado dorado (#E5B869)
  */
 export const HARMONIC_COLORS = {
-  root: '#C6A15B',
+  // Arpegios y grados de la tríada
+  root: '#E5B869',
   third: '#2DD4BF',
   fifth: '#818CF8',
-  passing: '#202024',
-  passingText: '#8A898D',
-  tonicC: '#C6A15B'
+
+  // Notas de la escala (Blanco y negro inspirado en teclas de piano)
+  scaleNote: '#F4F4F6',
+  scaleNoteBorder: '#D4D4D8',
+  scaleNoteText: '#0A0A0B',
+  scaleStaff: '#F4F4F6',
+  scaleStaffBorder: '#0A0A0B',
+
+  // Notas cromáticas (fuera de Do Mayor)
+  chromatic: '#27272A',
+  chromaticBorder: '#52525B',
+  chromaticText: '#CBD5E1',
+
+  // Alias semánticos para notas fuera de la tríada activa
+  passing: '#F4F4F6',
+  passingBorder: '#D4D4D8',
+  passingText: '#0A0A0B',
+  passingStaff: '#F4F4F6',
+
+  // Centro tonal diatónico Do (C)
+  tonicC: '#E5B869',
+
+  // Elementos estructurales y grabado musical
+  structural: '#52525B',
+  structuralMuted: '#3F3F46',
+  stem: '#CBD5E1',
+  ledger: '#71717A',
+  active: '#FFFFFF',
+  activeGlow: '#E5B869'
 };
+
+export const C_MAJOR_SCALE = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+
+/**
+ * Comprueba si una nota pertenece a la escala de Do Mayor (es diatónica).
+ * @param {string} noteName - Nombre de la nota (ej. 'C', 'F#', 'G3')
+ * @returns {boolean}
+ */
+export function isDiatonicNote(noteName) {
+  if (!noteName || typeof noteName !== 'string') return false;
+  const clean = noteName.replace(/[0-9]/g, '');
+  return C_MAJOR_SCALE.includes(clean);
+}
 
 /**
  * Determina el rol armónico de una nota en relación a una tríada dada.
  * @param {string} noteName - Nombre de la nota (ej. 'C', 'E', 'G')
- * @param {object} triad - Objeto de la tríada (de chordsData)
- * @returns {{ isMember: boolean, role: 'root'|'third'|'fifth'|'passing'|'other', color: string, label: string }}
+ * @param {object|null} triad - Objeto de la tríada (de chordsData) o null para vista general
+ * @returns {{ isMember: boolean, isDiatonic: boolean, role: 'root'|'third'|'fifth'|'passing'|'other', color: string, borderColor: string, textColor: string, label: string }}
  */
 export function getHarmonicRole(noteName, triad) {
+  const cleanNote = typeof noteName === 'string' ? noteName.replace(/[0-9]/g, '') : '';
+  const diatonic = isDiatonicNote(cleanNote);
+
+  // Si no hay tríada activa (Vista general de la escala):
+  // Diatónicas en blanco cálido piano; cromáticas en grafito.
   if (!triad || !triad.intervalos) {
-    return { isMember: false, role: 'passing', color: HARMONIC_COLORS.passing, label: '-' };
+    return {
+      isMember: false,
+      isDiatonic: diatonic,
+      role: 'passing',
+      color: diatonic ? HARMONIC_COLORS.scaleNote : HARMONIC_COLORS.chromatic,
+      borderColor: diatonic ? HARMONIC_COLORS.scaleNoteBorder : HARMONIC_COLORS.chromaticBorder,
+      textColor: diatonic ? HARMONIC_COLORS.scaleNoteText : HARMONIC_COLORS.chromaticText,
+      label: '-'
+    };
   }
 
-  const interval = triad.intervalos[noteName];
+  const interval = triad.intervalos[cleanNote];
+  // Si la nota no pertenece a la tríada activa:
+  // Si es diatónica de Do M -> Blanco cálido piano con letra negra
+  // Si es cromática -> Grafito con letra gris claro
   if (!interval) {
-    return { isMember: false, role: 'passing', color: HARMONIC_COLORS.passing, label: '-' };
+    return {
+      isMember: false,
+      isDiatonic: diatonic,
+      role: 'passing',
+      color: diatonic ? HARMONIC_COLORS.scaleNote : HARMONIC_COLORS.chromatic,
+      borderColor: diatonic ? HARMONIC_COLORS.scaleNoteBorder : HARMONIC_COLORS.chromaticBorder,
+      textColor: diatonic ? HARMONIC_COLORS.scaleNoteText : HARMONIC_COLORS.chromaticText,
+      label: '-'
+    };
   }
 
+  // Grados constitutivos del arpegio de la tríada:
   if (interval === '1') {
-    return { isMember: true, role: 'root', color: HARMONIC_COLORS.root, label: '1' };
+    return {
+      isMember: true,
+      isDiatonic: true,
+      role: 'root',
+      color: HARMONIC_COLORS.root,
+      borderColor: 'rgba(0,0,0,0.45)',
+      textColor: '#0A0A0B',
+      label: '1'
+    };
   }
   if (interval === '3' || interval === 'b3') {
-    return { isMember: true, role: 'third', color: HARMONIC_COLORS.third, label: interval };
+    return {
+      isMember: true,
+      isDiatonic: true,
+      role: 'third',
+      color: HARMONIC_COLORS.third,
+      borderColor: 'rgba(0,0,0,0.45)',
+      textColor: '#0A0A0B',
+      label: interval
+    };
   }
   if (interval === '5' || interval === 'b5') {
-    return { isMember: true, role: 'fifth', color: HARMONIC_COLORS.fifth, label: interval };
+    return {
+      isMember: true,
+      isDiatonic: true,
+      role: 'fifth',
+      color: HARMONIC_COLORS.fifth,
+      borderColor: 'rgba(0,0,0,0.45)',
+      textColor: '#0A0A0B',
+      label: interval
+    };
   }
 
-  return { isMember: true, role: 'other', color: '#A09FA3', label: interval };
+  return {
+    isMember: true,
+    isDiatonic: diatonic,
+    role: 'other',
+    color: '#CBD5E1',
+    borderColor: '#94A3B8',
+    textColor: '#0A0A0B',
+    label: interval
+  };
 }
 
 /**

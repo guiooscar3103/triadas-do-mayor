@@ -28,7 +28,7 @@ export default function MusicStaff({
   const [staffMode, setStaffMode] = useState('melodic'); // 'melodic' | 'block'
   const [onlyTriadNotes, setOnlyTriadNotes] = useState(false);
 
-  if (!position || !triad) return null;
+  if (!position) return null;
 
   // Parámetros de diseño vertical del pentagrama
   const firstLineY = 105; // 1ª línea (inferior, Mi4 escrito)
@@ -46,15 +46,16 @@ export default function MusicStaff({
   const endX = svgWidth - 30;
 
   // Filtrado de notas para el modo Melódico
-  const displayedNotes = onlyTriadNotes
+  const displayedNotes = (onlyTriadNotes && triad)
     ? position.notas.filter((n) => triad.notas.includes(n.nota))
     : position.notas;
 
   // Preparar notas para el modo Bloque (apiladas armónicamente en el registro central)
+  const activeChord = triad || { nombre: 'Do Mayor', simbolo: 'C', notas: ['C', 'E', 'G'], intervalos: { C: '1', E: '3', G: '5' } };
   const noteSemitones = { 'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11 };
-  const rootNote = triad.notas[0];
-  const thirdNote = triad.notas[1];
-  const fifthNote = triad.notas[2];
+  const rootNote = activeChord.notas[0];
+  const thirdNote = activeChord.notas[1];
+  const fifthNote = activeChord.notas[2];
   const octRoot = 3;
   const octThird = DIATONIC_INDEX[thirdNote] < DIATONIC_INDEX[rootNote] ? 4 : 3;
   const octFifth = DIATONIC_INDEX[fifthNote] < DIATONIC_INDEX[thirdNote] ? octThird + 1 : octThird;
@@ -74,7 +75,7 @@ export default function MusicStaff({
       nota: thirdNote,
       octava: octThird,
       midi: 12 * (octThird + 1) + noteSemitones[thirdNote],
-      label: triad.intervalos[thirdNote],
+      label: activeChord.intervalos[thirdNote] || '3',
       role: 'third',
       color: HARMONIC_COLORS.third
     },
@@ -83,7 +84,7 @@ export default function MusicStaff({
       nota: fifthNote,
       octava: octFifth,
       midi: 12 * (octFifth + 1) + noteSemitones[fifthNote],
-      label: triad.intervalos[fifthNote],
+      label: activeChord.intervalos[fifthNote] || '5',
       role: 'fifth',
       color: HARMONIC_COLORS.fifth
     }
@@ -97,7 +98,7 @@ export default function MusicStaff({
           <span className="text-xs font-semibold text-[#F1F0EC] tracking-wider uppercase">
             Pentagrama Notación Clásica
           </span>
-          <span className="px-2 py-0.5 rounded text-[11px] font-mono font-medium bg-[#202022] text-[#C6A15B] border border-[#303034]">
+          <span className="px-2 py-0.5 rounded text-[11px] font-mono font-medium bg-[#202022] text-[#E5B869] border border-[#303034]">
             Clave de Sol (8vb Guitarra)
           </span>
         </div>
@@ -114,7 +115,7 @@ export default function MusicStaff({
               onClick={() => setStaffMode('melodic')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-colors cursor-pointer ${
                 staffMode === 'melodic'
-                  ? 'bg-[#202022] text-[#F1F0EC] border border-[#C6A15B]/50 shadow-sm'
+                  ? 'bg-[#202022] text-[#F1F0EC] border border-[#E5B869]/50 shadow-sm'
                   : 'text-[#A09FA3] hover:text-[#F1F0EC]'
               }`}
             >
@@ -126,7 +127,7 @@ export default function MusicStaff({
               onClick={() => setStaffMode('block')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-colors cursor-pointer ${
                 staffMode === 'block'
-                  ? 'bg-[#202022] text-[#F1F0EC] border border-[#C6A15B]/50 shadow-sm'
+                  ? 'bg-[#202022] text-[#F1F0EC] border border-[#E5B869]/50 shadow-sm'
                   : 'text-[#A09FA3] hover:text-[#F1F0EC]'
               }`}
             >
@@ -141,7 +142,7 @@ export default function MusicStaff({
               onClick={() => setOnlyTriadNotes(!onlyTriadNotes)}
               className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors cursor-pointer ${
                 onlyTriadNotes
-                  ? 'bg-[#C6A15B]/15 border-[#C6A15B]/50 text-[#C6A15B]'
+                  ? 'bg-[#E5B869]/15 border-[#E5B869]/50 text-[#E5B869]'
                   : 'bg-[#0A0A0B] border-[#2A2A2E] text-[#A09FA3] hover:text-[#F1F0EC]'
               }`}
             >
@@ -177,9 +178,9 @@ export default function MusicStaff({
               y1={lineY}
               x2={svgWidth - 25}
               y2={lineY}
-              stroke="#3F3F46"
-              strokeWidth="1.2"
-              opacity="0.9"
+              stroke="#52525B"
+              strokeWidth="1.3"
+              opacity="1"
             />
           ))}
 
@@ -189,7 +190,7 @@ export default function MusicStaff({
             y1={topLineY}
             x2="25"
             y2={firstLineY}
-            stroke="#3F3F46"
+            stroke="#52525B"
             strokeWidth="2.5"
           />
 
@@ -199,7 +200,7 @@ export default function MusicStaff({
             y1={topLineY}
             x2={svgWidth - 28}
             y2={firstLineY}
-            stroke="#3F3F46"
+            stroke="#52525B"
             strokeWidth="1.5"
           />
           <line
@@ -207,7 +208,7 @@ export default function MusicStaff({
             y1={topLineY}
             x2={svgWidth - 24}
             y2={firstLineY}
-            stroke="#3F3F46"
+            stroke="#52525B"
             strokeWidth="3.5"
           />
 
@@ -216,7 +217,7 @@ export default function MusicStaff({
             <text
               x="36"
               y="102"
-              fill="#E4E4E7"
+              fill="#F1F0EC"
               fontSize="68"
               fontFamily="'Noto Music', serif"
               style={{ userSelect: 'none' }}
@@ -227,7 +228,7 @@ export default function MusicStaff({
             <text
               x="53"
               y="120"
-              fill="#C6A15B"
+              fill="#E5B869"
               fontSize="12"
               fontWeight="bold"
               fontStyle="italic"
@@ -237,12 +238,12 @@ export default function MusicStaff({
             </text>
           </g>
 
-          {/* Compás de 4/4 estilizado */}
+          {/* Compás de 4/4 estilizado con buen contraste */}
           <g transform="translate(90, 0)">
-            <text x="0" y="83" fill="#71717A" fontSize="20" fontWeight="bold" fontFamily="serif" textAnchor="middle">
+            <text x="0" y="83" fill="#9CA3AF" fontSize="20" fontWeight="bold" fontFamily="serif" textAnchor="middle">
               4
             </text>
-            <text x="0" y="103" fill="#71717A" fontSize="20" fontWeight="bold" fontFamily="serif" textAnchor="middle">
+            <text x="0" y="103" fill="#9CA3AF" fontSize="20" fontWeight="bold" fontFamily="serif" textAnchor="middle">
               4
             </text>
           </g>
@@ -268,40 +269,52 @@ export default function MusicStaff({
                     onClick={() => onNoteClick(note, note.index)}
                     className="staff-note cursor-pointer"
                   >
-                    {/* Líneas adicionales (Ledger lines) */}
+                    {/* Líneas adicionales (Ledger lines) con grosor y contraste reforzados */}
                     {ledgerLines.map((ly) => (
                       <line
                         key={`ledger-${note.id}-${ly}`}
-                        x1={x - 12}
+                        x1={x - 13}
                         y1={ly}
-                        x2={x + 12}
+                        x2={x + 13}
                         y2={ly}
-                        stroke="#52525B"
-                        strokeWidth="1.5"
+                        stroke="#71717A"
+                        strokeWidth="1.6"
                       />
                     ))}
 
                     {/* Resalte si está activa en el secuenciador */}
                     {isActive && (
-                      <circle
-                        cx={x}
-                        cy={y}
-                        r="14"
-                        fill="none"
-                        stroke="#C6A15B"
-                        strokeWidth="2"
-                        className="animate-ping"
-                      />
+                      <>
+                        <circle
+                          cx={x}
+                          cy={y}
+                          r="16"
+                          fill="none"
+                          stroke="#FFFFFF"
+                          strokeWidth="2.5"
+                          className="animate-ping"
+                          opacity="0.85"
+                        />
+                        <circle
+                          cx={x}
+                          cy={y}
+                          r="11"
+                          fill="none"
+                          stroke="#E5B869"
+                          strokeWidth="2"
+                          opacity="0.9"
+                        />
+                      </>
                     )}
 
-                    {/* Plica (Stem) */}
+                    {/* Plica (Stem) de grosor y luminosidad mejorados */}
                     <line
                       x1={isStemUp ? x + 5.5 : x - 5.5}
                       y1={y}
                       x2={isStemUp ? x + 5.5 : x - 5.5}
                       y2={isStemUp ? y - stemLength : y + stemLength}
-                      stroke={isActive ? '#F1F0EC' : '#71717A'}
-                      strokeWidth="1.5"
+                      stroke={isActive ? '#FFFFFF' : (role.isMember ? '#D4D4D8' : '#A1A1AA')}
+                      strokeWidth="1.6"
                     />
 
                     {/* Cabeza de nota elíptica con ángulo clásico de grabado (-20°) */}
@@ -311,25 +324,39 @@ export default function MusicStaff({
                       rx="6.5"
                       ry="4.8"
                       transform={`rotate(-20 ${x} ${y})`}
-                      fill={isActive ? '#F1F0EC' : (role.isMember ? role.color : '#27272A')}
-                      stroke={note.esTonicaDo ? '#C6A15B' : (role.isMember ? '#0A0A0B' : '#3F3F46')}
-                      strokeWidth={note.esTonicaDo ? 2 : 1}
-                      strokeDasharray={note.esTonicaDo && !role.isMember ? '2,2' : undefined}
-                      opacity={role.isMember ? 1 : 0.65}
+                      fill={
+                        isActive
+                          ? '#FFFFFF'
+                          : role.isMember
+                            ? role.color
+                            : (role.color || HARMONIC_COLORS.scaleStaff)
+                      }
+                      stroke={
+                        isActive
+                          ? '#FFFFFF'
+                          : note.esTonicaDo
+                            ? '#E5B869'
+                            : role.isMember
+                              ? '#0A0A0B'
+                              : (role.isDiatonic ? '#0A0A0B' : (role.borderColor || '#52525B'))
+                      }
+                      strokeWidth={isActive ? 2 : note.esTonicaDo ? 2 : 1.3}
+                      strokeDasharray={note.esTonicaDo && !role.isMember ? '2.5,2' : undefined}
+                      opacity={1}
                     />
 
-                    {/* Etiqueta de la nota debajo */}
+                    {/* Etiqueta de la nota debajo con alta legibilidad */}
                     <text
                       x={x}
                       y={svgHeight - 20}
-                      fill={isActive ? '#C6A15B' : (role.isMember ? '#F1F0EC' : '#71717A')}
+                      fill={isActive ? '#E5B869' : '#F1F0EC'}
                       fontSize="11"
-                      fontWeight={role.isMember ? 'bold' : 'normal'}
+                      fontWeight={role.isMember ? '800' : '600'}
                       fontFamily="monospace"
                       textAnchor="middle"
                     >
                       {note.nota}
-                      <tspan fontSize="9" fill={isActive ? '#C6A15B' : '#A09FA3'}>
+                      <tspan fontSize="9" fill={isActive ? '#E5B869' : '#A09FA3'}>
                         {note.octava}
                       </tspan>
                     </text>
@@ -338,9 +365,10 @@ export default function MusicStaff({
                     <text
                       x={x}
                       y={svgHeight - 6}
-                      fill="#71717A"
+                      fill={isActive ? '#E5B869' : '#A1A1AA'}
                       fontSize="9"
                       fontFamily="monospace"
+                      fontWeight="500"
                       textAnchor="middle"
                     >
                       {note.cuerda}ª:T{note.traste}
@@ -356,10 +384,10 @@ export default function MusicStaff({
             <g transform="translate(140, 0)">
               {/* Información del acorde */}
               <text x="320" y="32" fill="#F1F0EC" fontSize="16" fontWeight="bold" textAnchor="middle">
-                Acorde de {triad.nombre} ({triad.simbolo})
+                Acorde de {activeChord.nombre} ({activeChord.simbolo})
               </text>
               <text x="320" y={svgHeight - 16} fill="#A09FA3" fontSize="12" textAnchor="middle">
-                Notas apiladas: {triad.notas.join(' - ')} (Fundamental, 3ª, 5ª) • Haz clic en cada nota para escucharla
+                Notas apiladas: {activeChord.notas.join(' - ')} (Fundamental, 3ª, 5ª) • Haz clic en cada nota para escucharla
               </text>
 
               {/* Acorde en bloque centrado */}
@@ -389,8 +417,8 @@ export default function MusicStaff({
                             y1={ly}
                             x2={chordX + 16}
                             y2={ly}
-                            stroke="#52525B"
-                            strokeWidth="1.5"
+                            stroke="#71717A"
+                            strokeWidth="1.6"
                           />
                         ))}
                       </g>
@@ -402,7 +430,7 @@ export default function MusicStaff({
                       y1={minY - 32}
                       x2={chordX + 6.5}
                       y2={maxY}
-                      stroke="#71717A"
+                      stroke="#A1A1AA"
                       strokeWidth="1.8"
                     />
 

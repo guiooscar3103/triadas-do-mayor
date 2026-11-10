@@ -19,12 +19,12 @@ import { getHarmonicRole } from '../../utils/musicTheory';
 export default function Fretboard({
   position,
   triad,
-  labelMode = 'note', // 'note' | 'interval'
+  labelMode = 'note', // 'note' | 'interval' | 'none'
   showPassingNotes = true,
   activeNoteId = null,
   onNoteClick = () => {}
 }) {
-  if (!position || !triad) return null;
+  if (!position) return null;
 
   // Rango adaptativo de trastes con 1 traste de margen a cada lado
   const startFret = Math.max(0, position.trasteMin - 1);
@@ -60,14 +60,14 @@ export default function Fretboard({
     return marginLeft + (fretNum - startFret - 0.5) * fretWidth;
   };
 
-  // Propiedades visuales de las cuerdas (calibres diferenciados y metales cálidos)
+  // Propiedades visuales de las cuerdas (calibres diferenciados y acero/níquel luminoso de alta legibilidad)
   const stringStyles = {
-    1: { stroke: '#CBD5E1', width: 1.1, name: 'E4', num: '1ª' },
-    2: { stroke: '#A1A1AA', width: 1.4, name: 'B3', num: '2ª' },
-    3: { stroke: '#78716C', width: 1.9, name: 'G3', num: '3ª' },
-    4: { stroke: '#8B857F', width: 2.4, name: 'D3', num: '4ª' },
-    5: { stroke: '#6E6964', width: 2.9, name: 'A2', num: '5ª' },
-    6: { stroke: '#57534E', width: 3.4, name: 'E2', num: '6ª' }
+    1: { stroke: '#E2E8F0', width: 1.2, name: 'E4', num: '1ª' },
+    2: { stroke: '#CBD5E1', width: 1.5, name: 'B3', num: '2ª' },
+    3: { stroke: '#A8A29E', width: 2.0, name: 'G3', num: '3ª' },
+    4: { stroke: '#9CA3AF', width: 2.5, name: 'D3', num: '4ª' },
+    5: { stroke: '#94A3B8', width: 3.0, name: 'A2', num: '5ª' },
+    6: { stroke: '#8B95A5', width: 3.5, name: 'E2', num: '6ª' }
   };
 
   // Trastes con marcadores
@@ -82,7 +82,7 @@ export default function Fretboard({
       {/* Indicador sutil para móviles */}
       <div className="flex sm:hidden items-center justify-between text-[11px] text-[#A09FA3] mb-2 px-1">
         <span className="font-medium text-[#F1F0EC]">Mástil interactivo</span>
-        <span className="inline-flex items-center gap-1 text-[10px] font-mono text-[#C6A15B] bg-[#C6A15B]/10 px-2 py-0.5 rounded border border-[#C6A15B]/30">
+        <span className="inline-flex items-center gap-1 text-[10px] font-mono text-[#E5B869] bg-[#E5B869]/10 px-2 py-0.5 rounded border border-[#E5B869]/30">
           Desliza horizontalmente ↔
         </span>
       </div>
@@ -100,19 +100,19 @@ export default function Fretboard({
               <stop offset="100%" stopColor="#0F0F11" />
             </linearGradient>
 
-            {/* Gradiente metálico para los trastes (níquel/plata sobrio) */}
+            {/* Gradiente metálico para los trastes (níquel/plata sobrio con buen contraste) */}
             <linearGradient id="fretGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#303036" />
-              <stop offset="40%" stopColor="#666670" />
-              <stop offset="70%" stopColor="#8A8A94" />
-              <stop offset="100%" stopColor="#25252A" />
+              <stop offset="0%" stopColor="#383842" />
+              <stop offset="40%" stopColor="#757582" />
+              <stop offset="70%" stopColor="#9E9EA8" />
+              <stop offset="100%" stopColor="#2E2E36" />
             </linearGradient>
 
             {/* Gradiente para la cejuela (Nut de hueso grafito) */}
             <linearGradient id="nutGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#2A2A2E" />
-              <stop offset="50%" stopColor="#484850" />
-              <stop offset="100%" stopColor="#202024" />
+              <stop offset="0%" stopColor="#323238" />
+              <stop offset="50%" stopColor="#5E5E68" />
+              <stop offset="100%" stopColor="#28282E" />
             </linearGradient>
 
             {/* Halo sutil para Fundamental */}
@@ -166,8 +166,8 @@ export default function Fretboard({
                   cx={centerX}
                   cy={centerY}
                   r="5.5"
-                  fill="#33333A"
-                  opacity="0.45"
+                  fill="#52525B"
+                  opacity="0.6"
                 />
               );
             }
@@ -179,15 +179,15 @@ export default function Fretboard({
                     cx={centerX}
                     cy={marginTop + stringSpacing * 1.5}
                     r="4.5"
-                    fill="#33333A"
-                    opacity="0.45"
+                    fill="#52525B"
+                    opacity="0.6"
                   />
                   <circle
                     cx={centerX}
                     cy={marginTop + stringSpacing * 3.5}
                     r="4.5"
-                    fill="#33333A"
-                    opacity="0.45"
+                    fill="#52525B"
+                    opacity="0.6"
                   />
                 </g>
               );
@@ -211,8 +211,8 @@ export default function Fretboard({
                     width="8"
                     height={fretboardHeight + 4}
                     fill="url(#nutGrad)"
-                    stroke="#3F3F46"
-                    strokeWidth="1"
+                    stroke="#52525B"
+                    strokeWidth="1.2"
                     rx="1.5"
                   />
                   <line
@@ -255,9 +255,9 @@ export default function Fretboard({
                   y1={marginTop}
                   x2={wireX}
                   y2={marginTop + fretboardHeight}
-                  stroke="#A1A1AA"
-                  strokeWidth="0.6"
-                  opacity="0.6"
+                  stroke="#CBD5E1"
+                  strokeWidth="0.7"
+                  opacity="0.7"
                 />
               </g>
             );
@@ -270,8 +270,8 @@ export default function Fretboard({
             width={(position.trasteMax - position.trasteMin + 1) * fretWidth}
             height={fretboardHeight + 8}
             fill="none"
-            stroke="rgba(198, 161, 91, 0.35)"
-            strokeWidth="1.2"
+            stroke="rgba(229, 184, 105, 0.45)"
+            strokeWidth="1.4"
             strokeDasharray="4 3"
             rx="6"
             pointerEvents="none"
@@ -291,12 +291,12 @@ export default function Fretboard({
                   x={marginLeft - 16}
                   y={y + 3.5}
                   textAnchor="end"
-                  fill="#71717A"
+                  fill="#D4D4D8"
                   fontSize="11"
                   fontWeight="600"
                   fontFamily="monospace"
                 >
-                  {style.num} <tspan fill="#52525B">({style.name})</tspan>
+                  {style.num} <tspan fill="#A1A1AA">({style.name})</tspan>
                 </text>
 
                 {/* Sombra de la cuerda */}
@@ -305,7 +305,7 @@ export default function Fretboard({
                   y1={y + 1}
                   x2={marginLeft + fretboardWidth}
                   y2={y + 1}
-                  stroke="rgba(0,0,0,0.8)"
+                  stroke="rgba(0,0,0,0.85)"
                   strokeWidth={style.width + 0.8}
                 />
 
@@ -339,13 +339,15 @@ export default function Fretboard({
             const isRoot = roleInfo.role === 'root';
             const radius = isActive ? 15 : isRoot ? 13.5 : 12;
 
-            // Texto a mostrar según toggle
+            // Texto a mostrar según toggle ('note' | 'interval' | 'none')
             const displayText =
-              labelMode === 'interval'
-                ? roleInfo.isMember
-                  ? roleInfo.label
-                  : '•'
-                : note.nota;
+              labelMode === 'none'
+                ? ''
+                : labelMode === 'interval'
+                  ? roleInfo.isMember
+                    ? roleInfo.label
+                    : '•'
+                  : note.nota;
 
             return (
               <g
@@ -356,16 +358,27 @@ export default function Fretboard({
               >
                 {/* Resalte si está activa en el secuenciador */}
                 {isActive && (
-                  <circle
-                    cx={cx}
-                    cy={cy}
-                    r={radius + 6}
-                    fill="none"
-                    stroke="#F1F0EC"
-                    strokeWidth="2.5"
-                    className="animate-ping"
-                    opacity="0.85"
-                  />
+                  <>
+                    <circle
+                      cx={cx}
+                      cy={cy}
+                      r={radius + 6}
+                      fill="none"
+                      stroke="#FFFFFF"
+                      strokeWidth="2.5"
+                      className="animate-ping"
+                      opacity="0.85"
+                    />
+                    <circle
+                      cx={cx}
+                      cy={cy}
+                      r={radius + 3.5}
+                      fill="none"
+                      stroke="#E5B869"
+                      strokeWidth="2"
+                      opacity="0.9"
+                    />
+                  </>
                 )}
 
                 {/* Halo sutil de fundamental de tríada */}
@@ -375,24 +388,24 @@ export default function Fretboard({
                     cy={cy}
                     r={radius + 3.5}
                     fill="none"
-                    stroke="#C6A15B"
-                    strokeWidth="1.5"
-                    opacity="0.4"
+                    stroke="#E5B869"
+                    strokeWidth="1.6"
+                    opacity="0.5"
                     filter="url(#rootGlow)"
                   />
                 )}
 
-                {/* Anillo distintivo fino para Tónica Do (Centro tonal) */}
+                {/* Anillo distintivo fino para Tónica Do (Centro tonal de la escala) */}
                 {note.esTonicaDo && (
                   <circle
                     cx={cx}
                     cy={cy}
-                    r={radius + 3}
+                    r={radius + 3.2}
                     fill="none"
-                    stroke="#C6A15B"
+                    stroke="#E5B869"
                     strokeWidth="1.8"
                     strokeDasharray="3 2"
-                    opacity="0.85"
+                    opacity="0.95"
                   />
                 )}
 
@@ -407,10 +420,10 @@ export default function Fretboard({
                       ? '#FFFFFF'
                       : roleInfo.isMember
                         ? 'rgba(0,0,0,0.45)'
-                        : '#303034'
+                        : (roleInfo.borderColor || '#D4D4D8')
                   }
-                  strokeWidth={isActive ? 2.5 : 1.2}
-                  opacity={roleInfo.isMember ? 1 : 0.75}
+                  strokeWidth={isActive ? 2.5 : roleInfo.isMember ? 1.2 : 1.3}
+                  opacity={1}
                 />
 
                 {/* Texto de la nota o intervalo */}
@@ -419,9 +432,10 @@ export default function Fretboard({
                   y={cy + (labelMode === 'interval' && !roleInfo.isMember ? 3 : 3.5)}
                   textAnchor="middle"
                   fill={
-                    roleInfo.isMember
+                    roleInfo.textColor ||
+                    (roleInfo.isMember
                       ? '#0A0A0B'
-                      : '#8A898D'
+                      : '#0A0A0B')
                   }
                   fontSize={radius > 12.5 ? '11' : '10'}
                   fontWeight="800"
@@ -448,7 +462,7 @@ export default function Fretboard({
                   x={centerX}
                   y={marginTop - 11}
                   textAnchor="middle"
-                  fill={isInRange ? '#C6A15B' : '#52525B'}
+                  fill={isInRange ? '#E5B869' : '#71717A'}
                   fontSize="11"
                   fontWeight={isInRange ? 'bold' : 'normal'}
                   fontFamily="monospace"
@@ -460,8 +474,8 @@ export default function Fretboard({
                 <circle
                   cx={centerX}
                   cy={marginTop + fretboardHeight + 12}
-                  r={isInRange ? 1.8 : 1.2}
-                  fill={isInRange ? '#C6A15B' : '#2A2A2E'}
+                  r={isInRange ? 2 : 1.2}
+                  fill={isInRange ? '#E5B869' : '#3F3F46'}
                 />
               </g>
             );
